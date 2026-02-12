@@ -19,3 +19,20 @@ John logs into the dashboard on Monday morning. He isn't just looking for open j
 * **Hiring Analysis:** "As a job seeker, I want to visualize the distribution of hiring across all the major tech companies to asses where my applicationg efforts would be most fruitful."
 * **Layoff Monitoring:** "When I search a company, I want to know if they're downsizing or laying off workers so that I can devote less time applying there."
 * **Company Job Health Tracking:** "As an applicant, I want to view the companies with increasing revenue and a hiring:layoff ratio to determine which companies seem to be growing their team."
+
+## Section 4: Exploratory Data Analysis
+
+We conducted an initial analysis in the [EDA Notebook](../notebooks/eda_analysis.ipynb) to ensure our dataset supports the user stories defined in Section 3.
+
+**User Story Addressed:** Hiring Analysis
+
+**Visualization Summary:**  
+
+To address this, we generated a **Net Workforce Growth** bar chart by calculating a new feature, `net_change` (`new_hires` - `layoffs`), which represents the true expansion or contraction of a company's workforce.
+
+![Net Growth Plot](../img/eda_net_growth_plot.png)
+*Figure 1: Net workforce growth across major tech companies. Green bars indicate a positive hiring-to-layoff ratio.*
+
+**Support for Decision-Making:**
+
+This visualization directly helps John Doe by filtering out the noise in high hiring numbers. For instance, a company might hire 1,000 people but lay off 1,200. By visualizing the net change, John can identify which companies are truly expanding their teams rather than just replacing churned staff. This allows him to prioritize applications for companies with a positive green bar, which represents a healthier job environment.
