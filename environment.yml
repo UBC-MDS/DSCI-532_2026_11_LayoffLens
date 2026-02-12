@@ -1,0 +1,15 @@
+name: layoff-lens
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - matplotlib
+  - altair
+  - jupyterlab
+  - ipykernel
+  - pip
+  - pip:
+    - plotly
