@@ -8,6 +8,7 @@ dependencies:
   - numpy
   - matplotlib
   - altair
+  - vl-convert-python
   - jupyterlab
   - ipykernel
   - pip
