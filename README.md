@@ -1,7 +1,6 @@
 # Layoff Lens
 
-This is a Shiny Dashboard focused towards a layoff and hiring app. It aims to give data scientists and related interest groups the tools necessary to summarize workforce trends in 25 major companies and how it has changed from their respective beginning point in the data to 2025. Such tools such as company selection or industry filtering allow the dashboard to display certain companies that the user is interested in.
-
+This is a Shiny Dashboard that aims to give data scientists and related interest groups the tools necessary to summarize workforce trends in 25 major companies and how it has changed from their respective beginning point in the data to 2025. Such tools such as company selection or industry filtering allow the dashboard to display certain companies that the user is interested in.
 
 (Project title and 3-4 sentence summary).
 
