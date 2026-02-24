@@ -107,6 +107,9 @@ rfc3339_validator==0.1.4
 rfc3986-validator==0.1.1
 rfc3987-syntax==1.1.0
 rpds-py==0.30.0
+shiny
+shinylive
+shinywidgets
 Send2Trash==2.1.0
 setuptools==82.0.0
 six==1.17.0
