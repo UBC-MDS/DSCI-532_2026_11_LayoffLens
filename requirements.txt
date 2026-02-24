@@ -10,3 +10,4 @@ shinylive
 shinywidgets
 keplergl
 setuptools<81
+dash
