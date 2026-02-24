@@ -1,61 +1,31 @@
-import dash
-from dash import html, dcc
-import dash_bootstrap_components as dbc
+# Note: using the code from Ilya's DSCI 532 Lecture 3
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+import altair as alt
+from shiny import App, ui
+from shinywidgets import output_widget, render_altair
 
-app.layout = dbc.Container([
-    dbc.Row([
-        dbc.Col(html.H1("Layoff Lens"), width=12)
-    ], className="mb-4 mt-4"),
+countries = alt.topo_feature(
+    "https://vega.github.io/vega-datasets/data/world-110m.json",
+    "countries",
+)
 
-    dbc.Row([
-        # Sidebar for Filters
-        dbc.Col([
-            dbc.Card([
-                dbc.CardHeader("Filters"),
-                dbc.CardBody([
-                    html.P("Year Selection:"),
-                    dcc.RangeSlider(2020, 2025, step=1, value=[2020, 2025]),
-                    html.Br(),
-                    html.P("Industry Filter:"),
-                    dcc.Dropdown(options=['Fintech', 'SaaS', 'AI'],
-                                 multi=True, 
-                                 placeholder="Select Industry")
-                ])
-            ])
-        ], width=3),
+app_ui = ui.page_fluid(
+    ui.h4("World map (static geoshape)"),
+    output_widget("map"),
+)
 
-        # Main Content Area
-        dbc.Col([
-            dbc.Row([
-                # Card 1: Key Metric
-                dbc.Col(dbc.Card([
-                    dbc.CardBody([
-                        html.H4("Total Layoffs", className="card-title"),
-                        html.P("Placeholder: 124,000", className="text-danger")
-                    ])
-                ]), width=6),
-                # Card 2: Key Metric
-                dbc.Col(dbc.Card([
-                    dbc.CardBody([
-                        html.H4("Net Job Change", className="card-title"),
-                        html.P("Placeholder: +12,500", className="text-success")
-                    ])
-                ]), width=6),
-            ], className="mb-4"),
 
-            # Big Chart Placeholder
-            dbc.Card([
-                dbc.CardHeader("Hiring vs. Layoff Trends"),
-                dbc.CardBody([
-                    html.P("This card will display our interactive chart."),
-                    dcc.Graph(id='placeholder-graph')
-                ])
-            ])
-        ], width=9)
-    ])
-], fluid=True)
+def server(input, output, session):
+    @output
+    @render_altair
+    def map():
+        return (
+            alt.Chart(countries)
+            .mark_geoshape(stroke="white", strokeWidth=0.4)
+            .encode(color=alt.value("#93C5FD"))
+            .project(type="equalEarth")
+            .properties(height=430)
+        )
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
+app = App(app_ui, server)
