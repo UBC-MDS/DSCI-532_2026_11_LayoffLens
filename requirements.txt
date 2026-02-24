@@ -1,8 +1,11 @@
 jupyter
 shiny
 altair
+matplotlib
+vl-convert-python
 plotnine
 pandas
+plotly
 polars
 narwhals
 palmerpenguins
@@ -11,3 +14,4 @@ shinywidgets
 keplergl
 setuptools<81
 dash
+dash_bootstrap_components
