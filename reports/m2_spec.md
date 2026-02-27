@@ -10,19 +10,16 @@
 
 ## Component Inventory
 
-| ID                     | Type       | Shiny widget/renderer | Depends on                            | Job Story    |
-| ---------------------- | ---------- | --------------------- | ------------------------------------- | ------------ |
-| company                | Input      | idk                   |                                       | #1, #2,  #3 |
-| year                   | Input      | idk                   |                                       | #1, #2, #3   |
-| tech_companies         | Expression | idk                   | company                               | #1           |
-| net_change             | Input      | idk                   |                                       | #1           |
-| plot_tech_hires        | Output     | idk                   | tech_companies,<br />net_change, year | #1           |
-| layoffs                | Input      | idk                   |                                       | #2           |
-| plot_layoffs           | Output     | idk                   | company,<br />layoffs,<br />year      | #2           |
-| revenue_billions_usd   | Input      | idk                   |                                       | #3           |
-| new_hires              | Input      | idk                   |                                       | #3           |
-| hire_layoff_ratio      | Expression | idk                   | layoffs, new_hires,<br />company      | #3           |
-| plot_revenue_workforce | Output     | idk                   | hire_layoff_ratio,<br />year          | #3           |
+| ID                     | Type       | Shiny widget/renderer                                     | Depends on                     | Job Story  |
+| ---------------------- | ---------- | --------------------------------------------------------- | ------------------------------ | ---------- |
+| company                | Input      | `ui.input_selectize(multiple=True)`                       |                                | #1, #2, #3 |
+| year                   | Input      | `ui.input_slider(min=2001, max=2025, value=[2001, 2025])` |                                | #1, #2, #3 |
+| hiring_metric          | Input      | `ui.input_select()`                                       |                                | #1         |
+| filtered_df            | Expression | `@reactive.calc`                                          | company, year                  | #1, #2, #3 |
+| hire_layoff_ratio      | Expression | `@reactive.calc`                                          | filtered_df                    | #3         |
+| plot_tech_hires        | Output     | `@render_altair`                                          | filtered_df, hiring_metric     | #1         |
+| plot_layoffs           | Output     | `@render_altair`                                          | filtered_df                    | #2         |
+| plot_revenue_workforce | Output     | `@render_altair`                                          | filtered_df, hire_layoff_ratio | #3         |
 
 ## Reactivity Diagram
 
@@ -34,17 +31,26 @@ Stadium ([Name]) (or Circle) = rendered output
 
 ```mermaid
 flowchart TD
-  A[/input_year/] --> F{{filtered_df}}
-  B[/input_region/] --> F
-  F --> P1([plot_trend])
-  F --> P2([tbl_summary])
-  C[/input_color/] --> P3([plot_scatter])
+  A[/company/] --> F{{filtered_df}}
+  B[/year/] --> F
+  C[/hiring_metric/] --> P1([plot_tech_hires])
+  F --> P1
+  F --> P2([plot_layoffs])
+  F --> R{{hire_layoff_ratio}}
+  R --> P3([plot_revenue_workforce])
+  F --> P3
 ```
 
 ## Calculation Details
 
-For each @reactive.calc in your diagram, briefly describe:
+**`filtered_df`**
 
-- Which inputs it depends on.
-- What transformation it performs (e.g., "filters rows to the selected year range and region(s)").
-- Which outputs consume it.
+- **Depends on:** `company`, `year`
+- **Transformation:** Filters the raw CSV to only the rows matching the selected company/companies and the selected year range.
+- **Consumed by:** `plot_tech_hires`, `plot_layoffs`, `hire_layoff_ratio`, `plot_revenue_workforce`
+
+**`hire_layoff_ratio`**
+
+- **Depends on:** `filtered_df`
+- **Transformation:** Adds a computed column `new_hires / layoffs` (guarded against division by zero) to the filtered dataframe. Represents how many people a company hires for every one it lays off.
+- **Consumed by:** `plot_revenue_workforce`
