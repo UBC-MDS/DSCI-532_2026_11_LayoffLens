@@ -3,6 +3,29 @@
 import altair as alt
 from shiny import App, ui
 from shinywidgets import output_widget, render_altair
+import pandas as pd
+
+data = pd.read_csv("data/raw/tech_employment_2000_2025.csv")
+
+companies = sorted(data['company'].unique())
+years = sorted(data['year'].unique())
+
+companies_ui = ui.input_selectize(
+    "company",
+    "Select Companies:",
+    choices=companies,
+    multiple=True
+)
+
+years_ui = ui.input_slider(
+    "year",
+    "Select Year Range:",
+    min=min(years),
+    max=max(years),
+    value=[2001, 2025], # Sets the default range handle positions
+    sep="",             
+    step=1
+)
 
 countries = alt.topo_feature(
     "https://vega.github.io/vega-datasets/data/world-110m.json",
