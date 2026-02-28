@@ -4,9 +4,10 @@
 
 | # | Job Story                                                                                                                                                               | Status        | Notes |
 | - | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ----- |
-| 1 | As a job seeker, I want to visualize the distribution of hiring across all the major tech companies to<br />assess where my application efforts would be most fruitful. | ⏳ Pending M2 | ...   |
-| 2 | When I search a company, I want to know if they're downsizing or laying off workers so that I can<br />devote less time applying there.                                 | ⏳ Pending M2 | ...   |
-| 3 | As an applicant, I want to view the companies with increasing revenue and a hiring:layoff ratio to<br />determine which companies seem to be growing their team         | ⏳ Pending M2 | ...   |
+| 1 | As a job seeker, I want to visualize the distribution of hiring across all the major tech companies to assess where my application efforts would be most fruitful. | ⏳ Pending M2 | ...   |
+| 2 | When I search a company, I want to know if they're downsizing or laying off workers so that I can devote less time applying there. | ⏳ Pending M2 | ...   |
+| 3 | As an applicant, I want to view the companies with increasing revenue and a hiring:layoff ratio to determine which companies seem to be growing their team. | ⏳ Pending M2 | ...   |
+| 4 | As an applicant, I want to reset all filters to see the full picture of the tech job market or make different selections. | ⏳ Pending M2 | *Optional Complexity Feature* |
 
 ## Component Inventory
 
@@ -20,6 +21,7 @@
 | plot_tech_hires        | Output     | `@render_altair`                                          | filtered_df, hiring_metric     | #1         |
 | plot_layoffs           | Output     | `@render_altair`                                          | filtered_df                    | #2         |
 | plot_revenue_workforce | Output     | `@render_altair`                                          | filtered_df, hire_layoff_ratio | #3         |
+| reset                  | Input      | `ui.input_action_button("reset", "Reset All Filters")`    |                                | #4         |
 
 ## Reactivity Diagram
 
