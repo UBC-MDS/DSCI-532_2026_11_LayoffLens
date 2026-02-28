@@ -58,11 +58,11 @@ app_ui = shiny.ui.page_sidebar(
         companies_ui,  
         years_ui,     
         hiring_metric_ui,
+        reset_ui,
         shiny.ui.hr(), 
         shiny.ui.help_text(
             "Note: High hiring spikes can precede consolidation. Use the Hire-Layoff ratio to assess long-term stability."
         ),
-        reset_ui,
     ),
     shiny.ui.card(
         shiny.ui.card_header("Company Hiring & Layoff Trends"),
