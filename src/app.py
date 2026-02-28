@@ -87,9 +87,9 @@ def server(input, output, session):
         
         chart = alt.Chart(df_plot).mark_bar().encode(
             x=alt.X("year:O", title="Year"),
-            y=alt.Y("revenue_in_billions:Q", title="Revenue by Year (Billions USD)"),
+            y=alt.Y("revenue_billions_usd:Q", title="Revenue by Year (Billions USD)"),
             color="company:N",
-            tooltip=["company", "year", "revenue_in_billions"]
+            tooltip=["company", "year", "revenue_billions_usd"]
         ).properties(
             width="container",
             height=400
