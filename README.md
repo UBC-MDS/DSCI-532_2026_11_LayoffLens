@@ -1,8 +1,11 @@
 # Layoff Lens
 
-This is a Shiny Dashboard that aims to give data scientists and related interest groups the tools necessary to summarize workforce trends in 25 major companies and how it has changed from their respective beginning point in the data to 2025. Such tools such as company selection or industry filtering allow the dashboard to display certain companies that the user is interested in.
+Layoff Lens is an interactive Shiny dashboard designed to help job seekers and data scientists navigate the volatile tech employment landscape. By summarizing workforce trends across major tech companies from 2000 to 2025, the tool allows users to cut through the noise of high hiring numbers to identify companies with true net growth.
 
-(Project title and 3-4 sentence summary).
+## Deployed Dashboards
+
+- [Stable Version](https://019c8d0c-d197-57fd-3fdf-d468eac4c556.share.connect.posit.cloud/)
+- [Development Preview](https://019c8d14-1608-8384-81a5-8d19259745d4.share.connect.posit.cloud/)
 
 ## Local Development
 
@@ -20,16 +23,22 @@ cd DSCI-532_2026_11_LayoffLens
 Ensure you have `conda` or `mamba` installed.
 
 ```bash
+# Create and activate a virtual environment
 conda env create -f environment.yml
 conda activate layoff-lens
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
 ### Run the Dashboard
 
-Navigate to the source directory and run the app script:
+Use the Shiny CLI to run the app:
 
 ```bash
-python src/app.py
+shiny run --reload src/app.py
 ```
 
-Once running, open your browser and go to [this link](http://127.0.0.1:8050/) to view the skeleton dashboard.
+Ensure "hot reload" is enabled. This allows the app to refresh automatically when you save changes.
+
+Once running, open the link displayed on your terminal to view the dashboard.
