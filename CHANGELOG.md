@@ -4,18 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Following the [CHANGELOG and Reflection Guidelines](https://github.ubc.ca/mds-2025-26/DSCI_532_viz-2_students/blob/main/milestone1/general_guidelines.md#3-changelog-and-reflection-milestones-24)
 
-## [0.1.0]
+## [0.4.0]
 
-- Repository Creation and Metadata
-- Add rough sketch of dashboard
-- Create dashboard skeleton
-- Add section 4 to proposal
-- Add section 1 and 3 to proposal
-- Complete Teamwork Contract
-- Add CoC and DESCRIPTION
-- Add CONTRIBUTING
-- Add summary to README
-- Add section 2 to the proposal
+## [0.3.0]
 
 ## [0.2.0]
 
@@ -47,6 +38,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 Based on the current state of our app, we have implemented the functions for all job stories and this is a strong foundation for this dashboard. Further contributions and edits will be made over the next couple of milestones to ensure all job stories are appropriately considered and fulfilled. Currently, we have major components for each job story and optional filters as well.
 
-## [0.3.0]
+## [0.1.0]
 
-## [0.4.0]
+- Repository Creation and Metadata
+- Add rough sketch of dashboard
+- Create dashboard skeleton
+- Add section 4 to proposal
+- Add section 1 and 3 to proposal
+- Complete Teamwork Contract
+- Add CoC and DESCRIPTION
+- Add CONTRIBUTING
+- Add summary to README
+- Add section 2 to the proposal
