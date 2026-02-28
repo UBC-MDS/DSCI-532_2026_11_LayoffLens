@@ -113,5 +113,19 @@ def server(input, output, session):
 
         return chart
 
+    @render.text
+    def hire_layoff_ratio():
+        df = filtered_df()
+        if df.empty:
+            return "Hire-Layoff Trend Not Available"
+
+        total_hires = df.loc[:,"new_hires"].sum()
+        total_layoffs = df.loc[:, "layoffs"].sum()
+
+        if total_hires == 0 or total_layoffs == 0:
+            return "Hire-Layoff Ratio Not Available"
+        else:
+            return f"Hire-Layoff Ratio: {total_hires / total_layoffs:.2f}"
+
 
 app = shiny.App(app_ui, server)
