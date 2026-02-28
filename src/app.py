@@ -1,24 +1,21 @@
-# Note: using the code from Ilya's DSCI 532 Lecture 3
-
 import altair as alt
-from shiny import App, ui
+import shiny
 from shinywidgets import output_widget, render_altair
 import pandas as pd
-from shiny import reactive
 
 data = pd.read_csv("data/raw/tech_employment_2000_2025.csv")
 
 companies = sorted(data['company'].unique())
 years = sorted(data['year'].unique())
 
-companies_ui = ui.input_selectize(
+companies_ui = shiny.ui.input_selectize(
     "company",
     "Select Companies:",
     choices=companies,
     multiple=True
 )
 
-years_ui = ui.input_slider(
+years_ui = shiny.ui.input_slider(
     "year",
     "Select Year Range:",
     min=min(years),
@@ -34,7 +31,7 @@ HIRING_METRICS = {
     "hiring_rate_pct": "Hiring Rate %",
 }
 
-hiring_metric_ui = ui.input_select(
+hiring_metric_ui = shiny.ui.input_select(
     "hiring_metric",
     "Hiring Metric:",
     choices=HIRING_METRICS,
@@ -45,9 +42,22 @@ countries = alt.topo_feature(
     "countries",
 )
 
-app_ui = ui.page_fluid(
-    ui.h4("World map (static geoshape)"),
-    output_widget("map"),
+app_ui = shiny.ui.page_sidebar(
+    shiny.ui.sidebar(
+        shiny.ui.h2("Filters"),
+        companies_ui,  
+        years_ui,     
+        hiring_metric_ui,
+    ),
+    shiny.ui.card(
+        shiny.ui.card_header("Company Hiring & Layoff Trends"),
+        output_widget("company_trend_plot"),
+    ),
+    shiny.ui.card(
+        shiny.ui.card_header("Global View"),
+        output_widget("map"),
+    ),
+    title="Tech Workforce Dashboard"
 )
 
 
@@ -63,7 +73,7 @@ def server(input, output, session):
             .properties(height=430)
         )
 
-    @reactive.calc
+    @shiny.reactive.calc
     def filtered_df():
         selected = list(input.company())
         yr = input.year()
@@ -71,6 +81,34 @@ def server(input, output, session):
             (data["company"].isin(selected))
             & (data["year"].between(yr[0], yr[1]))
         ]
+    
+    @output
+    @render_altair
+    def company_trend_plot():
+        df_plot = filtered_df()
+        
+        if df_plot.empty:
+            return alt.Chart(pd.DataFrame()).mark_text().encode(text=alt.value("Select a company to see trends"))
+
+        df_melted = df_plot.melt(
+            id_vars=['year', 'company'], 
+            value_vars=['layoffs', 'new_hires'],
+            var_name='Metric', 
+            value_name='Count'
+        )
+
+        chart = alt.Chart(df_melted).mark_line(point=True).encode(
+            x=alt.X("year:O", title="Year"),
+            y=alt.Y("Count:Q", title="Number of People"),
+            color="company:N",
+            strokeDash="Metric:N", 
+            tooltip=["company", "year", "Metric", "Count"]
+        ).properties(
+            width="container",
+            height=400
+        ).interactive()
+
+        return chart
 
 
-app = App(app_ui, server)
+app = shiny.App(app_ui, server)

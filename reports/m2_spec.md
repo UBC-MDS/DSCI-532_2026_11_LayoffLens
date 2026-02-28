@@ -12,8 +12,8 @@
 
 | ID                     | Type       | Shiny widget/renderer | Depends on                            | Job Story    |
 | ---------------------- | ---------- | --------------------- | ------------------------------------- | ------------ |
-| company                | Input      | idk                   |                                       | #1, #2,  #3 |
-| year                   | Input      | idk                   |                                       | #1, #2, #3   |
+| company                | Input      | `ui.input_selectize()`                   |                                       | #1, #2,  #3 |
+| year                   | Input      | `ui.input_slider()`                   |                                       | #1, #2, #3   |
 | tech_companies         | Expression | idk                   | company                               | #1           |
 | net_change             | Input      | idk                   |                                       | #1           |
 | plot_tech_hires        | Output     | idk                   | tech_companies,<br />net_change, year | #1           |
@@ -23,6 +23,8 @@
 | new_hires              | Input      | idk                   |                                       | #3           |
 | hire_layoff_ratio      | Expression | idk                   | layoffs, new_hires,<br />company      | #3           |
 | plot_revenue_workforce | Output     | idk                   | hire_layoff_ratio,<br />year          | #3           |
+| filtered_df | Expression     | `@reactive.calc`                   | company, year          | #3           |
+| plot_trends | Output     | `@render_altair`                   | filtered_df          | #3           |
 
 ## Reactivity Diagram
 
@@ -48,3 +50,9 @@ For each @reactive.calc in your diagram, briefly describe:
 - Which inputs it depends on.
 - What transformation it performs (e.g., "filters rows to the selected year range and region(s)").
 - Which outputs consume it.
+
+1 `filtered_df`:
+
+- Depends on: `input.company` and `input.year`.
+- Transformation: Filters the raw dataset to include only the selected companies and the specified range of years.
+- Consumers: `plot_trends`.
