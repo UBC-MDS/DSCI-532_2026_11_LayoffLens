@@ -38,6 +38,11 @@ hiring_metric_ui = shiny.ui.input_select(
     choices=HIRING_METRICS,
 )
 
+reset_ui = shiny.ui.input_action_button(
+    "reset",
+    "Reset All Filters",
+)
+
 countries = alt.topo_feature(
     "https://vega.github.io/vega-datasets/data/world-110m.json",
     "countries",
@@ -52,7 +57,8 @@ app_ui = shiny.ui.page_sidebar(
         shiny.ui.hr(), 
         shiny.ui.help_text(
             "Note: High hiring spikes can precede consolidation. Use the Hire-Layoff ratio to assess long-term stability."
-        )
+        ),
+        reset_ui,
     ),
     shiny.ui.card(
         shiny.ui.card_header("Company Hiring & Layoff Trends"),
@@ -72,6 +78,7 @@ app_ui = shiny.ui.page_sidebar(
 
 
 def server(input, output, session):
+
     @shiny.reactive.calc
     def filtered_df():
         selected = list(input.company())
@@ -160,6 +167,14 @@ def server(input, output, session):
             return "Total Layoffs Not Available"
         
         return f"Total Layoffs: {total_layoffs}"
+    
+    # Optional complexity feature that resets all filters
+    @shiny.reactive.effect
+    @shiny.reactive.event(input.reset)
+    def reset_filters():
+        shiny.ui.update_selectize("company", selected=[])
+        shiny.ui.update_slider("year", value=[min(years), max(years)])
+        shiny.ui.update_select("hiring_metric", selected="net_change")
 
 
 app = shiny.App(app_ui, server)
