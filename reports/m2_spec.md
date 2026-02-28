@@ -17,8 +17,10 @@
 | year | Input | ui.input_slider() | — | #1, #2, #3 |
 | hiring_metric | Input | ui.input_select() | — | #1 |
 | filtered_df | Expression | @reactive.calc | company, year | #1, #2, #3 |
-| company_trend_plot | Output | @render_altair | filtered_df | #1, #2 |
+| company_trend_plot | Output | @render_altair | filtered_df, hiring_metric | #1, #2 |
 | hire_layoff_ratio | Output | @render.text | filtered_df | #3 |
+| ratio_title | Output | @render.text | hiring_metric | #1 |
+| metric_title | Output | @render.text | hiring_metric | #1 |
 | reset_ui | Effect | @reactive.effect | - | #4 |
 
 ## Reactivity Diagram
@@ -26,22 +28,34 @@
 ```mermaid
 flowchart TD
   %% Inputs
-  A[/company/] 
+  A[/company/]
   B[/year/]
+  C[/hiring_metric/]
+  D[/reset/]
 
-  %% Reactive Expressions
+  %% Reactive Expression
   F{{filtered_df}}
 
   %% Outputs
   P1([company_trend_plot])
   P2([hire_layoff_ratio])
+  P3([ratio_title])
+  P4([metric_title])
 
   %% Connections
   A --> F
   B --> F
   F --> P1
+  C --> P1
   F --> P2
-  ```
+  C --> P3
+  C --> P4
+
+  %% Reset effect updates all inputs
+  D -.-> A
+  D -.-> B
+  D -.-> C
+```
 
 ## Calculation Details
 
