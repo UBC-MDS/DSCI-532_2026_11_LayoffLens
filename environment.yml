@@ -13,5 +13,5 @@ dependencies:
   - ipykernel
   - pip
   - pip:
-    - plotly
-    - dash-bootstrap-components
+    - shiny
+    - shinywidgets
