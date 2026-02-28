@@ -54,11 +54,13 @@ app_ui = shiny.ui.page_sidebar(
         output_widget("company_trend_plot"),
     ),
     shiny.ui.card(
-        shiny.ui.card_header("Global View"),
-        output_widget("map"),
+        shiny.ui.card_header("Company Revenue in Billions USD"),
+        output_widget("revenue_in_billions"),
     ),
     shiny.ui.layout_columns(
-        shiny.ui.value_box("Hire-Layoff Ratio", shiny.ui.output_text("hire_layoff_ratio"),
+        shiny.ui.value_box("Hire-Layoff Ratio", shiny.ui.output_text("hire_layoff_ratio")),
+        shiny.ui.value_box("Total Hires", shiny.ui.output_text("total_hires")),
+        shiny.ui.value_box("Total Layoffs", shiny.ui.output_text("total_layoffs")),
     ),
     title="Tech Workforce Dashboard"
 )
@@ -66,16 +68,6 @@ app_ui = shiny.ui.page_sidebar(
 
 def server(input, output, session):
     @output
-    @render_altair
-    def map():
-        return (
-            alt.Chart(countries)
-            .mark_geoshape(stroke="white", strokeWidth=0.4)
-            .encode(color=alt.value("#93C5FD"))
-            .project(type="equalEarth")
-            .properties(height=430)
-        )
-
     @shiny.reactive.calc
     def filtered_df():
         selected = list(input.company())
@@ -84,6 +76,26 @@ def server(input, output, session):
             (data["company"].isin(selected))
             & (data["year"].between(yr[0], yr[1]))
         ]
+    
+    @output
+    @render_altair
+    def revenue_in_billions():
+        df_plot = filtered_df()
+
+        if df_plot.empty:
+            return alt.Chart(pd.DataFrame()).mark_text().encode(text=alt.value("Select a company to see revenue in billions"))
+        
+        chart = alt.Chart(df_plot).mark_bar().encode(
+            x=alt.X("year:O", title="Year"),
+            y=alt.Y("revenue_in_billions:Q", title="Revenue by Year (Billions USD)"),
+            color="company:N",
+            tooltip=["company", "year", "revenue_in_billions"]
+        ).properties(
+            width="container",
+            height=400
+        ).interactive()
+
+        return chart
     
     @output
     @render_altair
@@ -115,17 +127,35 @@ def server(input, output, session):
 
     @render.text
     def hire_layoff_ratio():
-        df = filtered_df()
-        if df.empty:
+        filtered_data = filtered_df()
+        if filtered_data.empty:
             return "Hire-Layoff Trend Not Available"
 
-        total_hires = df.loc[:,"new_hires"].sum()
-        total_layoffs = df.loc[:, "layoffs"].sum()
+        total_hires = filtered_data.loc[:,"new_hires"].sum()
+        total_layoffs = filtered_data.loc[:, "layoffs"].sum()
 
         if total_hires == 0 or total_layoffs == 0:
             return "Hire-Layoff Ratio Not Available"
-        else:
-            return f"Hire-Layoff Ratio: {total_hires / total_layoffs:.2f}"
+        
+        return f"Hire-Layoff Ratio: {total_hires / total_layoffs:.2f}"
+    
+    @render.text
+    def total_hires():
+        filtered_data = filtered_df()
+        total_hires = filtered_data.loc[:, "new_hires"].sum()
+        if filtered_data.empty:
+            return "Total Hires Not Available"
+        
+        return f"Total Hires: {total_hires}"
+    
+    @render.text
+    def total_layoffs():
+        filtered_data = filtered_df()
+        total_layoffs = filtered_data.loc[:, "layoffs"].sum()
+        if filtered_data.empty:
+            return "Total Layoffs Not Available"
+        
+        return f"Total Layoffs: {total_layoffs}"
 
 
 app = shiny.App(app_ui, server)
