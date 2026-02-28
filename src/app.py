@@ -12,6 +12,7 @@ companies_ui = shiny.ui.input_selectize(
     "company",
     "Select Companies:",
     choices=companies,
+    selected=companies[0],
     multiple=True
 )
 
@@ -20,7 +21,7 @@ years_ui = shiny.ui.input_slider(
     "Select Year Range:",
     min=min(years),
     max=max(years),
-    value=[2001, 2025],
+    value=[min(years), max(years)],
     sep="",             
     step=1
 )
@@ -53,6 +54,10 @@ app_ui = shiny.ui.page_sidebar(
         companies_ui,  
         years_ui,     
         hiring_metric_ui,
+        shiny.ui.hr(), 
+        shiny.ui.help_text(
+            "Note: High hiring spikes can precede consolidation. Use the Hire-Layoff ratio to assess long-term stability."
+        ),
         reset_ui,
     ),
     shiny.ui.card(
@@ -68,7 +73,7 @@ app_ui = shiny.ui.page_sidebar(
         shiny.ui.value_box("Total Hires", shiny.ui.output_text("total_hires")),
         shiny.ui.value_box("Total Layoffs", shiny.ui.output_text("total_layoffs")),
     ),
-    title="Tech Workforce Dashboard"
+    title="Layoff Lens: Tech Workforce Dashboard"
 )
 
 
@@ -131,7 +136,7 @@ def server(input, output, session):
 
         return chart
 
-    @render.text
+    @shiny.render.text
     def hire_layoff_ratio():
         filtered_data = filtered_df()
         if filtered_data.empty:
@@ -145,7 +150,7 @@ def server(input, output, session):
         
         return f"Hire-Layoff Ratio: {total_hires / total_layoffs:.2f}"
     
-    @render.text
+    @shiny.render.text
     def total_hires():
         filtered_data = filtered_df()
         total_hires = filtered_data.loc[:, "new_hires"].sum()
@@ -154,7 +159,7 @@ def server(input, output, session):
         
         return f"Total Hires: {total_hires}"
     
-    @render.text
+    @shiny.render.text
     def total_layoffs():
         filtered_data = filtered_df()
         total_layoffs = filtered_data.loc[:, "layoffs"].sum()
