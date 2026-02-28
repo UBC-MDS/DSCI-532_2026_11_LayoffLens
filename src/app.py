@@ -81,8 +81,11 @@ def server(input, output, session):
 
     @shiny.reactive.calc
     def filtered_df():
-        selected = list(input.company())
+        company_val = input.company()
+        selected = list(company_val) if company_val else []
         yr = input.year()
+        if not selected:
+            return data.head(0)
         return data[
             (data["company"].isin(selected))
             & (data["year"].between(yr[0], yr[1]))
@@ -168,13 +171,25 @@ def server(input, output, session):
         
         return f"Total Layoffs: {total_layoffs}"
     
-    # Optional complexity feature that resets all filters
     @shiny.reactive.effect
     @shiny.reactive.event(input.reset)
-    def reset_filters():
-        shiny.ui.update_selectize("company", selected=[])
-        shiny.ui.update_slider("year", value=[min(years), max(years)])
-        shiny.ui.update_select("hiring_metric", selected="net_change")
+    async def reset_filters():
+        shiny.ui.update_selectize(
+            "company",
+            choices=companies,
+            selected=companies[0],
+            session=session,
+        )
+        shiny.ui.update_slider(
+            "year",
+            value=[int(min(years)), int(max(years))],
+            session=session,
+        )
+        shiny.ui.update_select(
+            "hiring_metric",
+            selected="net_change",
+            session=session,
+        )
 
 
 app = shiny.App(app_ui, server)
