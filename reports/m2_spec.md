@@ -2,58 +2,49 @@
 
 ## Job Stories
 
-| # | Job Story                                                                                                                                                               | Status        | Notes |
-| - | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ----- |
-| 1 | As a job seeker, I want to visualize the distribution of hiring across all the major tech companies to<br />assess where my application efforts would be most fruitful. | ⏳ Pending M2 | ...   |
-| 2 | When I search a company, I want to know if they're downsizing or laying off workers so that I can<br />devote less time applying there.                                 | ⏳ Pending M2 | ...   |
-| 3 | As an applicant, I want to view the companies with increasing revenue and a hiring:layoff ratio to<br />determine which companies seem to be growing their team         | ⏳ Pending M2 | ...   |
+| # | Story | Status | Notes |
+|---|-----------|--------|-------|
+| 1 | As a job seeker, I want to visualize the distribution of hiring across all the major tech companies to assess where my application efforts would be most fruitful. | ✅ Implemented | Using the Sidebar filters to isolate specific company trends. |
+| 2 | When I search a company, I want to know if they're downsizing or laying off workers so that I can devote less time applying there. | ✅ Implemented | Visualized via the line chart with distinct styles for hires vs layoffs. |
+| 3 | As an applicant, I want to view the companies with a hiring:layoff ratio to determine which companies seem to be growing their team. | ✅ Implemented | Displayed as a real-time KPI in the dashboard value box. |
 
 ## Component Inventory
 
-| ID                     | Type       | Shiny widget/renderer | Depends on                            | Job Story    |
-| ---------------------- | ---------- | --------------------- | ------------------------------------- | ------------ |
-| company                | Input      | `ui.input_selectize()`                   |                                       | #1, #2,  #3 |
-| year                   | Input      | `ui.input_slider()`                   |                                       | #1, #2, #3   |
-| tech_companies         | Expression | idk                   | company                               | #1           |
-| net_change             | Input      | idk                   |                                       | #1           |
-| plot_tech_hires        | Output     | idk                   | tech_companies,<br />net_change, year | #1           |
-| layoffs                | Input      | idk                   |                                       | #2           |
-| plot_layoffs           | Output     | idk                   | company,<br />layoffs,<br />year      | #2           |
-| revenue_billions_usd   | Input      | idk                   |                                       | #3           |
-| new_hires              | Input      | idk                   |                                       | #3           |
-| hire_layoff_ratio      | Expression | `@render_text`        | layoffs, new_hires,<br />company      | #3           |
-| plot_revenue_workforce | Output     | idk                   | hire_layoff_ratio,<br />year          | #3           |
-| filtered_df | Expression     | `@reactive.calc`                   | company, year          | #3           |
-| plot_trends | Output     | `@render_altair`                   | filtered_df          | #3           |
+| ID | Type | Shiny widget/renderer | Depends on | Job Story |
+|----|------|----------------------|------------|-----------|
+| company | Input | ui.input_selectize() | — | #1, #2, #3 |
+| year | Input | ui.input_slider() | — | #1, #2, #3 |
+| hiring_metric | Input | ui.input_select() | — | #1 |
+| filtered_df | Expression | @reactive.calc | company, year | #1, #2, #3 |
+| company_trend_plot | Output | @render_altair | filtered_df | #1, #2 |
+| hire_layoff_ratio | Output | @render.text | filtered_df | #3 |
 
 ## Reactivity Diagram
 
-Draw your planned reactive graph as a Mermaid flowchart using the notation from Lecture 3:
-
-[/Input/] (Parallelogram) (or [Input] Rectangle) = reactive input
-Hexagon {{Name}} = @reactive.calc expression
-Stadium ([Name]) (or Circle) = rendered output
-
 ```mermaid
 flowchart TD
-  A[/input_year/] --> F{{filtered_df}}
-  B[/input_region/] --> F
-  F --> P1([plot_trend])
-  F --> P2([tbl_summary])
-  C[/input_color/] --> P3([plot_scatter])
-```
+  %% Inputs
+  A[/company/] 
+  B[/year/]
+
+  %% Reactive Expressions
+  F{{filtered_df}}
+
+  %% Outputs
+  P1([company_trend_plot])
+  P2([hire_layoff_ratio])
+
+  %% Connections
+  A --> F
+  B --> F
+  F --> P1
+  F --> P2
+  ```
 
 ## Calculation Details
 
-For each @reactive.calc in your diagram, briefly describe:
-
-- Which inputs it depends on.
-- What transformation it performs (e.g., "filters rows to the selected year range and region(s)").
-- Which outputs consume it.
-
-1 `filtered_df`:
+### 1 `filtered_df`:
 
 - Depends on: `input.company` and `input.year`.
-- Transformation: Filters the raw dataset to include only the selected companies and the specified range of years.
-- Consumers: `plot_trends`.
-- Consumers: `hire_layoff_ratio`.
+- Transformation: Extracts the list of selected companies from the selectize input and the start/end years from the slider. It then subsets the master dataset to include only rows that match both criteria.
+- Consumers: `plot_trends` and `hire_layoff_ratio`.
