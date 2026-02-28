@@ -12,6 +12,7 @@ companies_ui = shiny.ui.input_selectize(
     "company",
     "Select Companies:",
     choices=companies,
+    selected=companies[0],
     multiple=True
 )
 
@@ -20,7 +21,7 @@ years_ui = shiny.ui.input_slider(
     "Select Year Range:",
     min=min(years),
     max=max(years),
-    value=[2001, 2025],
+    value=[min(years), max(years)],
     sep="",             
     step=1
 )
