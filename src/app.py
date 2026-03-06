@@ -245,7 +245,7 @@ def server(input, output, session):
         if total_hires == 0 or total_layoffs == 0:
             return "Hire-Layoff Ratio Not Available"
         
-        return f"Hire-Layoff Ratio: {total_hires / total_layoffs:.2f}"
+        return f"Hire-Layoff Ratio: {total_hires / total_layoffs:,.2f}"
     
     @shiny.render.text
     def total_hires():
@@ -254,7 +254,7 @@ def server(input, output, session):
         if filtered_data.empty:
             return "Total Hires Not Available"
         
-        return f"Total Hires: {total_hires}"
+        return f"Total Hires: {total_hires:,}"
     
     @shiny.render.text
     def total_layoffs():
@@ -263,7 +263,7 @@ def server(input, output, session):
         if filtered_data.empty:
             return "Total Layoffs Not Available"
         
-        return f"Total Layoffs: {total_layoffs}"
+        return f"Total Layoffs: {total_layoffs:,}"
     
     @shiny.reactive.effect
     @shiny.reactive.event(input.reset)
