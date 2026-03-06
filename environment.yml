@@ -18,4 +18,3 @@ dependencies:
     - chatlas
     - querychat
     - python-dotenv
-    - openai
