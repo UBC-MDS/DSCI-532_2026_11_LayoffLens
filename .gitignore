@@ -3,11 +3,9 @@ __pycache__/
 *$py.class
 .ipynb_checkpoints/
 .cursor/
-
 env/
 venv/
 .env
-
 .DS_Store
 Thumbs.db
 .vscode
