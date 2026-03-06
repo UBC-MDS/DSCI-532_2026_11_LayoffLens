@@ -3,7 +3,10 @@ import shiny
 from shinywidgets import output_widget, render_altair
 import pandas as pd
 import querychat
-from chatlas import ChatGithub, ChatOllama
+from chatlas import ChatGithub
+from dotenv import load_dotenv
+from pathlib import Path
+import os
 
 data = pd.read_csv("data/raw/tech_employment_2000_2025.csv")
 data = data.drop(
@@ -17,6 +20,8 @@ years = sorted(data['year'].unique())
 DEFAULT_COMPANY = [companies[0]] if companies else []
 DEFAULT_YEAR_MIN = int(min(years)) if years else 2000
 DEFAULT_YEAR_MAX = int(max(years)) if years else 2025
+
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 qc = querychat.QueryChat(
     data.copy(),
@@ -44,7 +49,7 @@ Workforce data of 25 companies from 2000-2025.
 - gdp_growth_us_pct: Annual US GDP growth rate (percentage).
 - unemployment_rate_us_pct: AnnQualitative confidence level for the data point (High, Medium, Low) based on source reliability.ual average US unemployment rate (percentage).
 """,
-    client=ChatOllama(model="qwen3:0.6b")
+    client = ChatGithub(model = "openai/gpt-4.1")
 )
 
 companies_ui = shiny.ui.input_selectize(
