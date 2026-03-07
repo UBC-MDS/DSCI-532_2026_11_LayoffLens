@@ -9,6 +9,7 @@ from pathlib import Path
 import os
 
 data = pd.read_csv("data/raw/tech_employment_2000_2025.csv")
+data["net_change_pct"] = (data["employees_end"] / data["employees_start"] * 100) - 100
 data = data.drop(
     ["is_estimated", "confidence_level", "data_quality_score"],
     axis=1
@@ -74,12 +75,14 @@ HIRING_METRICS = {
     "net_change": "Net Change",
     "new_hires": "New Hires",
     "hiring_rate_pct": "Hiring Rate %",
+    "net_change_pct": "Net Change %",
 }
 
 hiring_metric_ui = shiny.ui.input_select(
     "hiring_metric",
     "Hiring Metric:",
     choices=HIRING_METRICS,
+    selected="net_change_pct"
 )
 
 reset_ui = shiny.ui.input_action_button(
@@ -208,13 +211,19 @@ def server(input, output, session):
             return alt.Chart(pd.DataFrame()).mark_text().encode(text=alt.value("Select a company to see trends"))
 
         metric_label = HIRING_METRICS.get(metric, metric)
-        y_title = "Rate (%)" if metric == "hiring_rate_pct" else "Number of People"
+        
+        if "pct" in metric:
+            y_title = f"{metric_label} (%)"
+            y_format = ".1f" 
+        else:
+            y_title = f"{metric_label} (Total)"
+            y_format = ","
 
         chart = alt.Chart(df_plot).mark_line(point=True).encode(
             x=alt.X("year:O", title="Year"),
-            y=alt.Y(f"{metric}:Q", title=f"{metric_label}"),
+            y=alt.Y(f"{metric}:Q", title=y_title, axis=alt.Axis(format=y_format)),
             color="company:N",
-            tooltip=["company", "year", metric]
+            tooltip=["company", "year", alt.Tooltip(f"{metric}:Q", format=y_format)]
         ).properties(
             width="container",
             height=400
@@ -285,7 +294,7 @@ def server(input, output, session):
         )
         shiny.ui.update_select(
             "hiring_metric",
-            selected="net_change",
+            selected="net_change_pct",
             session=session,
         )
 
