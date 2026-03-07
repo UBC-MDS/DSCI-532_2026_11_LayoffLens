@@ -8,6 +8,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [0.3.0]
 
+### Additions
+
+- A querychat AI chat interface
+- A dataframe output component to see the filtered dataframe
+- At least 2 other output component visualizations that use the querychat filtered dataframe (you can borrow from your original tab) 
+- A data download button that will download the querychat filtered dataframe
+
+### Improvements/Fixed Issues
+
+- Addressed all Milestone 2 Feedback (TA and Instructor)
+- Relative scale for net change (net_change_pct)
+- Add proper notations and format for the number texts
+- Change dashboard layout to view plots simultaneously (potentially transpose numbers to the right side)
+
+### Reflection 0.3.0
+
+Based on the work completed so far as per Milestone 3 Guidelines, we have addressed all of the addition items as listed above. We have an AI chat interface which allows us to interact with the filtered data for hiring and layoff trends, alongside a data download button for the querychat filtered dataframe. The other dashboard specific additions are incorporated in `src/app.py` and changes are visible there. We also had certain visual issues for the dashboard that required improvements. By adding these changes, the layout is appropriate for both the user and contributors. These changes include formatting changes, creating new tabs, layout of graphs being accessed, etc.
+
 ## [0.2.0]
 
 ### Added
@@ -34,7 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - The outputs that were static were changed to reactive as per Milestone 1 Feedback
 - Clearly explain the purpose of the app and the curiousity factors
 
-### Reflection
+### Reflection 0.2.0
 
 Based on the current state of our app, we have implemented the functions for all job stories and this is a strong foundation for this dashboard. Further contributions and edits will be made over the next couple of milestones to ensure all job stories are appropriately considered and fulfilled. Currently, we have major components for each job story and optional filters as well.
 
