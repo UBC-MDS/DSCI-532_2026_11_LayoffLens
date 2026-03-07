@@ -9,6 +9,7 @@ from pathlib import Path
 import os
 
 data = pd.read_csv("data/raw/tech_employment_2000_2025.csv")
+data["net_change_pct"] = (data["employees_end"] / data["employees_start"] * 100) - 100
 data = data.drop(
     ["is_estimated", "confidence_level", "data_quality_score"],
     axis=1
@@ -17,7 +18,8 @@ data = data.drop(
 companies = sorted(data['company'].unique())
 years = sorted(data['year'].unique())
 
-DEFAULT_COMPANY = [companies[0]] if companies else []
+SELECTED_DEFAULT_COMPANIES = ["Amazon", "Apple", "Alphabet", "Meta", "Microsoft"]
+DEFAULT_COMPANY = [c for c in SELECTED_DEFAULT_COMPANIES if c in companies]
 DEFAULT_YEAR_MIN = int(min(years)) if years else 2000
 DEFAULT_YEAR_MAX = int(max(years)) if years else 2025
 
@@ -74,12 +76,14 @@ HIRING_METRICS = {
     "net_change": "Net Change",
     "new_hires": "New Hires",
     "hiring_rate_pct": "Hiring Rate %",
+    "net_change_pct": "Net Change %",
 }
 
 hiring_metric_ui = shiny.ui.input_select(
     "hiring_metric",
     "Hiring Metric:",
     choices=HIRING_METRICS,
+    selected="net_change_pct"
 )
 
 reset_ui = shiny.ui.input_action_button(
@@ -108,28 +112,35 @@ app_ui = shiny.ui.page_sidebar(
         # --- TAB 1: EXISTING DASHBOARD ---
         shiny.ui.nav_panel(
             "Company Insights",
-            shiny.ui.card(
-                shiny.ui.card_header("Company Hiring & Layoff Trends"),
-                output_widget("company_trend_plot"),
-            ),
-            shiny.ui.card(
-                shiny.ui.card_header("Company Revenue in Billions USD"),
-                output_widget("revenue_in_billions"),
-            ),
             shiny.ui.layout_columns(
                 shiny.ui.value_box(
                     shiny.ui.output_text("ratio_title"), 
-                    shiny.ui.output_text("hire_layoff_ratio")
+                    shiny.ui.output_text("hire_layoff_ratio"),
+                    theme="primary",
                 ),
                 shiny.ui.value_box(
                     shiny.ui.output_text("metric_title"), 
-                    shiny.ui.output_text("total_hires")
+                    shiny.ui.output_text("total_hires"),
+                    theme="success",
                 ),
                 shiny.ui.value_box(
                     "Total Layoffs", 
-                    shiny.ui.output_text("total_layoffs")
+                    shiny.ui.output_text("total_layoffs"),
+                    theme="danger",
                 ),
             ),
+            shiny.ui.layout_columns(
+                shiny.ui.card(
+                    shiny.ui.card_header("Workforce Trends"),
+                    output_widget("company_trend_plot"),
+                ),
+                shiny.ui.card(
+                    shiny.ui.card_header("Revenue (Billions USD)"),
+                    output_widget("revenue_in_billions"),
+                ),
+                col_widths=[7, 5]
+            ),
+            
         ),
         
         # --- TAB 2: SKELETON FOR NEW TAB ---
@@ -185,7 +196,7 @@ def server(input, output, session):
         chart = alt.Chart(df_plot).mark_bar().encode(
             x=alt.X("year:O", title="Year"),
             y=alt.Y("revenue_billions_usd:Q", title="Revenue by Year (Billions USD)"),
-            color="company:N",
+            color=alt.Color("company:N", legend=None),
             tooltip=["company", "year", "revenue_billions_usd"]
         ).properties(
             width="container",
@@ -199,19 +210,35 @@ def server(input, output, session):
     def company_trend_plot():
         df_plot = filtered_df()
         metric = input.hiring_metric()
+        metric_label = HIRING_METRICS.get(metric, metric)   
+
+        selected_companies = input.company()
+        if len(selected_companies) > 3:
+            comp_str = f"{len(selected_companies)} Companies"
+        else:
+            comp_str = ", ".join(selected_companies)
+            
+        chart_title = f"{metric_label} Trends for {comp_str} ({input.year()[0]}-{input.year()[1]})"
         
         if df_plot.empty:
             return alt.Chart(pd.DataFrame()).mark_text().encode(text=alt.value("Select a company to see trends"))
 
         metric_label = HIRING_METRICS.get(metric, metric)
-        y_title = "Rate (%)" if metric == "hiring_rate_pct" else "Number of People"
+        
+        if "pct" in metric:
+            y_title = f"{metric_label} (%)"
+            y_format = ".1f" 
+        else:
+            y_title = f"{metric_label} (Total)"
+            y_format = ","
 
         chart = alt.Chart(df_plot).mark_line(point=True).encode(
             x=alt.X("year:O", title="Year"),
-            y=alt.Y(f"{metric}:Q", title=f"{metric_label}"),
+            y=alt.Y(f"{metric}:Q", title=y_title, axis=alt.Axis(format=y_format)),
             color="company:N",
-            tooltip=["company", "year", metric]
+            tooltip=["company", "year", alt.Tooltip(f"{metric}:Q", format=y_format)]
         ).properties(
+            title=chart_title,
             width="container",
             height=400
         ).interactive()
@@ -245,7 +272,7 @@ def server(input, output, session):
         if total_hires == 0 or total_layoffs == 0:
             return "Hire-Layoff Ratio Not Available"
         
-        return f"Hire-Layoff Ratio: {total_hires / total_layoffs:.2f}"
+        return f"Hire-Layoff Ratio: {total_hires / total_layoffs:,.2f}"
     
     @shiny.render.text
     def total_hires():
@@ -254,7 +281,7 @@ def server(input, output, session):
         if filtered_data.empty:
             return "Total Hires Not Available"
         
-        return f"Total Hires: {total_hires}"
+        return f"Total Hires: {total_hires:,}"
     
     @shiny.render.text
     def total_layoffs():
@@ -263,7 +290,7 @@ def server(input, output, session):
         if filtered_data.empty:
             return "Total Layoffs Not Available"
         
-        return f"Total Layoffs: {total_layoffs}"
+        return f"Total Layoffs: {total_layoffs:,}"
     
     @shiny.reactive.effect
     @shiny.reactive.event(input.reset)
@@ -281,7 +308,7 @@ def server(input, output, session):
         )
         shiny.ui.update_select(
             "hiring_metric",
-            selected="net_change",
+            selected="net_change_pct",
             session=session,
         )
 
