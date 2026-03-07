@@ -140,6 +140,7 @@ app_ui = shiny.ui.page_sidebar(
             shiny.ui.card(
                 shiny.ui.card_header(shiny.ui.output_text("chat_title")),
                 shiny.ui.output_data_frame("chat_table"),
+                shiny.ui.download_button("download_data", "Download"),
                 fill=True,
             ),
             fillable=True,
@@ -285,5 +286,11 @@ def server(input, output, session):
             session=session,
         )
 
+    @shiny.render.download(filename="layoff_lens_data.csv")
+    def download_data():
+        df = qc_vals.df()
+        if df is not None:
+            yield df.to_csv(index=False)
+            
 
 app = shiny.App(app_ui, server)
