@@ -18,7 +18,8 @@ data = data.drop(
 companies = sorted(data['company'].unique())
 years = sorted(data['year'].unique())
 
-DEFAULT_COMPANY = [companies[0]] if companies else []
+SELECTED_DEFAULT_COMPANIES = ["Amazon", "Apple", "Alphabet", "Meta", "Microsoft"]
+DEFAULT_COMPANY = [c for c in SELECTED_DEFAULT_COMPANIES if c in companies]
 DEFAULT_YEAR_MIN = int(min(years)) if years else 2000
 DEFAULT_YEAR_MAX = int(max(years)) if years else 2025
 
@@ -128,13 +129,16 @@ app_ui = shiny.ui.page_sidebar(
                     theme="danger",
                 ),
             ),
-            shiny.ui.card(
-                shiny.ui.card_header("Company Hiring & Layoff Trends"),
-                output_widget("company_trend_plot"),
-            ),
-            shiny.ui.card(
-                shiny.ui.card_header("Company Revenue in Billions USD"),
-                output_widget("revenue_in_billions"),
+            shiny.ui.layout_columns(
+                shiny.ui.card(
+                    shiny.ui.card_header("Workforce Trends"),
+                    output_widget("company_trend_plot"),
+                ),
+                shiny.ui.card(
+                    shiny.ui.card_header("Revenue (Billions USD)"),
+                    output_widget("revenue_in_billions"),
+                ),
+                col_widths=[7, 5]
             ),
             
         ),
@@ -192,7 +196,7 @@ def server(input, output, session):
         chart = alt.Chart(df_plot).mark_bar().encode(
             x=alt.X("year:O", title="Year"),
             y=alt.Y("revenue_billions_usd:Q", title="Revenue by Year (Billions USD)"),
-            color="company:N",
+            color=alt.Color("company:N", legend=None),
             tooltip=["company", "year", "revenue_billions_usd"]
         ).properties(
             width="container",
@@ -206,6 +210,15 @@ def server(input, output, session):
     def company_trend_plot():
         df_plot = filtered_df()
         metric = input.hiring_metric()
+        metric_label = HIRING_METRICS.get(metric, metric)   
+
+        selected_companies = input.company()
+        if len(selected_companies) > 3:
+            comp_str = f"{len(selected_companies)} Companies"
+        else:
+            comp_str = ", ".join(selected_companies)
+            
+        chart_title = f"{metric_label} Trends for {comp_str} ({input.year()[0]}-{input.year()[1]})"
         
         if df_plot.empty:
             return alt.Chart(pd.DataFrame()).mark_text().encode(text=alt.value("Select a company to see trends"))
@@ -225,6 +238,7 @@ def server(input, output, session):
             color="company:N",
             tooltip=["company", "year", alt.Tooltip(f"{metric}:Q", format=y_format)]
         ).properties(
+            title=chart_title,
             width="container",
             height=400
         ).interactive()
