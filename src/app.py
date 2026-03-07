@@ -108,6 +108,23 @@ app_ui = shiny.ui.page_sidebar(
         # --- TAB 1: EXISTING DASHBOARD ---
         shiny.ui.nav_panel(
             "Company Insights",
+            shiny.ui.layout_columns(
+                shiny.ui.value_box(
+                    shiny.ui.output_text("ratio_title"), 
+                    shiny.ui.output_text("hire_layoff_ratio"),
+                    theme="primary",
+                ),
+                shiny.ui.value_box(
+                    shiny.ui.output_text("metric_title"), 
+                    shiny.ui.output_text("total_hires"),
+                    theme="success",
+                ),
+                shiny.ui.value_box(
+                    "Total Layoffs", 
+                    shiny.ui.output_text("total_layoffs"),
+                    theme="danger",
+                ),
+            ),
             shiny.ui.card(
                 shiny.ui.card_header("Company Hiring & Layoff Trends"),
                 output_widget("company_trend_plot"),
@@ -116,20 +133,7 @@ app_ui = shiny.ui.page_sidebar(
                 shiny.ui.card_header("Company Revenue in Billions USD"),
                 output_widget("revenue_in_billions"),
             ),
-            shiny.ui.layout_columns(
-                shiny.ui.value_box(
-                    shiny.ui.output_text("ratio_title"), 
-                    shiny.ui.output_text("hire_layoff_ratio")
-                ),
-                shiny.ui.value_box(
-                    shiny.ui.output_text("metric_title"), 
-                    shiny.ui.output_text("total_hires")
-                ),
-                shiny.ui.value_box(
-                    "Total Layoffs", 
-                    shiny.ui.output_text("total_layoffs")
-                ),
-            ),
+            
         ),
         
         # --- TAB 2: SKELETON FOR NEW TAB ---
