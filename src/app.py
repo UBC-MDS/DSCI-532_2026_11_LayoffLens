@@ -2,8 +2,17 @@ import altair as alt
 import shiny
 from shinywidgets import output_widget, render_altair
 import pandas as pd
+import querychat
+from chatlas import ChatGithub
+from dotenv import load_dotenv
+from pathlib import Path
+import os
 
 data = pd.read_csv("data/raw/tech_employment_2000_2025.csv")
+data = data.drop(
+    ["is_estimated", "confidence_level", "data_quality_score"],
+    axis=1
+)
 
 companies = sorted(data['company'].unique())
 years = sorted(data['year'].unique())
@@ -11,6 +20,37 @@ years = sorted(data['year'].unique())
 DEFAULT_COMPANY = [companies[0]] if companies else []
 DEFAULT_YEAR_MIN = int(min(years)) if years else 2000
 DEFAULT_YEAR_MAX = int(max(years)) if years else 2025
+
+load_dotenv(Path(__file__).parent.parent / ".env")
+
+qc = querychat.QueryChat(
+    data.copy(),
+    "Company_Workforce",
+    greeting="""👋 Ask me anything about the workforce data.
+
+* <span class="suggestion">Show only AMD</span>
+* <span class="suggestion">Filter to companies who grew in 2025</span>
+* <span class="suggestion">Who paid the highest fare?</span>
+* <span class="suggestion">Which companies shrunk in 2020?</span>
+""",
+    data_description="""
+Workforce data of 25 companies from 2000-2025.
+- company: Name of the technology company.
+- year: Calendar year of the observation (mapped from fiscal year where applicable).
+- employees_start: Number of employees at the beginning of the year.
+- employees_end: Number of employees at the end of the year, primarily sourced from SEC 10-K filings.
+- new_hires: Estimated number of employees hired during the year.
+- layoffs: Number of publicly announced workforce reductions during the year (does not include natural attrition).
+- net_change: Net change in employee count during the year (employees_end − employees_start).
+- hiring_rate_pct: Hiring rate as a percentage of starting workforce size.
+- attrition_rate_pct: Layoff rate as a percentage of starting workforce size.
+- revenue_billions_usd: Annual company revenue expressed in billions of US dollars.
+- stock_price_change_pct: Year-over-year percentage change in the company’s stock price
+- gdp_growth_us_pct: Annual US GDP growth rate (percentage).
+- unemployment_rate_us_pct: AnnQualitative confidence level for the data point (High, Medium, Low) based on source reliability.ual average US unemployment rate (percentage).
+""",
+    client = ChatGithub(model = "openai/gpt-4.1")
+)
 
 companies_ui = shiny.ui.input_selectize(
     "company",
@@ -64,24 +104,63 @@ app_ui = shiny.ui.page_sidebar(
             "Note: High hiring spikes can precede consolidation. Use the Hire-Layoff ratio to assess long-term stability."
         )
     ),
-    shiny.ui.card(
-        shiny.ui.card_header("Company Hiring & Layoff Trends"),
-        output_widget("company_trend_plot"),
+    shiny.ui.navset_card_tab(
+        # --- TAB 1: EXISTING DASHBOARD ---
+        shiny.ui.nav_panel(
+            "Company Insights",
+            shiny.ui.card(
+                shiny.ui.card_header("Company Hiring & Layoff Trends"),
+                output_widget("company_trend_plot"),
+            ),
+            shiny.ui.card(
+                shiny.ui.card_header("Company Revenue in Billions USD"),
+                output_widget("revenue_in_billions"),
+            ),
+            shiny.ui.layout_columns(
+                shiny.ui.value_box(
+                    shiny.ui.output_text("ratio_title"), 
+                    shiny.ui.output_text("hire_layoff_ratio")
+                ),
+                shiny.ui.value_box(
+                    shiny.ui.output_text("metric_title"), 
+                    shiny.ui.output_text("total_hires")
+                ),
+                shiny.ui.value_box(
+                    "Total Layoffs", 
+                    shiny.ui.output_text("total_layoffs")
+                ),
+            ),
+        ),
+        
+        # --- TAB 2: SKELETON FOR NEW TAB ---
+        shiny.ui.nav_panel(
+            "LLM Chat",
+            shiny.ui.layout_sidebar(
+            qc.sidebar(),
+            shiny.ui.card(
+                shiny.ui.card_header(shiny.ui.output_text("chat_title")),
+                shiny.ui.output_data_frame("chat_table"),
+                fill=True,
+            ),
+            fillable=True,
+        ),
     ),
-    shiny.ui.card(
-        shiny.ui.card_header("Company Revenue in Billions USD"),
-        output_widget("revenue_in_billions"),
-    ),
-    shiny.ui.layout_columns(
-        shiny.ui.value_box(shiny.ui.output_text("ratio_title"), shiny.ui.output_text("hire_layoff_ratio")),
-        shiny.ui.value_box(shiny.ui.output_text("metric_title"), shiny.ui.output_text("total_hires")),
-        shiny.ui.value_box("Total Layoffs", shiny.ui.output_text("total_layoffs")),
     ),
     title="Layoff Lens: Tech Workforce Dashboard"
 )
 
 
 def server(input, output, session):
+
+    qc_vals = qc.server()
+
+    @shiny.render.text
+    def chat_title():
+        return qc_vals.title() or "Employees dataset"
+
+    @shiny.render.data_frame
+    def chat_table():
+        return qc_vals.df()
 
     @shiny.reactive.calc
     def filtered_df():

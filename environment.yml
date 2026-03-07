@@ -15,3 +15,6 @@ dependencies:
   - pip:
     - shiny
     - shinywidgets
+    - chatlas
+    - querychat
+    - python-dotenv

@@ -21,14 +21,14 @@ The following is a demo of our dashboard and how the components function:
 
 To run the dashboard locally, follow these steps:
 
-### Clone the Repository
+### 1 Clone the Repository
 
 ```bash
 git clone https://github.com/UBC-MDS/DSCI-532_2026_11_LayoffLens.git
 cd DSCI-532_2026_11_LayoffLens
 ```
 
-### Set Up the Environment
+### 2 Set Up the Environment
 
 Ensure you have `conda` or `mamba` installed.
 
@@ -41,7 +41,17 @@ conda activate layoff-lens
 pip install -r requirements.txt
 ```
 
-### Run the Dashboard
+### 3 Configure API Credentials for AI Features
+
+The "LLM Chat" tab requires a GitHub Personal Access Token (PAT) to access the AI models.
+
+1. Generate a Token
+   - GitHub Settings > Developer Settings > Personal Access Tokens > Fine-grained tokens.
+2. Grant Read-only access to Models for this repository.
+3. Create a file named .env in the root directory.
+4. Copy the format from .env.example and add your token.
+
+### 4 Run the Dashboard
 
 Use the Shiny CLI to run the app:
 
