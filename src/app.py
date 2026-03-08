@@ -105,6 +105,8 @@ app_ui = shiny.ui.page_sidebar(
         hiring_metric_ui,
         reset_ui,
         shiny.ui.hr(), 
+        shiny.ui.help_text("Tip: Click and drag on charts to zoom; double-click to reset view."),
+        shiny.ui.hr(),
         shiny.ui.help_text(
             "Note: High hiring spikes can precede consolidation. Use the Hire-Layoff ratio to assess long-term stability."
         )
@@ -267,10 +269,13 @@ def server(input, output, session):
     @shiny.reactive.calc
     def filtered_df():
         company_val = input.company()
-        selected = list(company_val) if company_val else []
         yr = input.year()
-        if not selected:
-            return data.head(0)
+
+        if not company_val:
+            selected = DEFAULT_COMPANY
+        else:
+            selected = list(company_val)
+
         return data[
             (data["company"].isin(selected))
             & (data["year"].between(yr[0], yr[1]))
