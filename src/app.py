@@ -153,12 +153,12 @@ app_ui = shiny.ui.page_sidebar(
                 shiny.ui.card_header(shiny.ui.output_text("chat_title")),
                 shiny.ui.output_data_frame("chat_table"),
                 shiny.ui.download_button("download_data", "Download"),
-                fill=True,
+                # fill=True,
             ),
-            shiny.ui.card(
-                shiny.ui.card_header("Filtered Data"),
-                shiny.ui.output_data_frame("filtered_data")
-            ),
+            # shiny.ui.card(
+            #     shiny.ui.card_header("Filtered Data"),
+            #     shiny.ui.output_data_frame("filtered_data")
+            # ),
             shiny.ui.layout_columns(
                 shiny.ui.card(
                     shiny.ui.card_header("Workforce Trends"),
