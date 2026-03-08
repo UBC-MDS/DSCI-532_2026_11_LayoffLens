@@ -377,7 +377,7 @@ def server(input, output, session):
         if filtered_data.empty:
             return "Total Hires Not Available"
         
-        return f"Total Hires: {total_hires}"
+        return f"Total Hires: {total_hires:,}"
     
     @shiny.render.text
     def total_layoffs():
