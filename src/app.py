@@ -1,6 +1,7 @@
 import altair as alt
 import shiny
 from shinywidgets import output_widget, render_altair
+from shiny import render
 import pandas as pd
 import querychat
 from chatlas import ChatGithub
@@ -154,6 +155,10 @@ app_ui = shiny.ui.page_sidebar(
                 shiny.ui.download_button("download_data", "Download"),
                 fill=True,
             ),
+            shiny.ui.card(
+                shiny.ui.card_header("Filtered Data"),
+                shiny.ui.output_data_frame("filtered_data")
+            ),
             fillable=True,
         ),
     ),
@@ -185,6 +190,11 @@ def server(input, output, session):
             (data["company"].isin(selected))
             & (data["year"].between(yr[0], yr[1]))
         ]
+    
+    @output
+    @render.data_frame
+    def filtered_data():
+        return filtered_df()
     
     @output
     @render_altair
@@ -282,7 +292,7 @@ def server(input, output, session):
         if filtered_data.empty:
             return "Total Hires Not Available"
         
-        return f"Total Hires: {total_hires:,}"
+        return f"Total Hires: {total_hires}"
     
     @shiny.render.text
     def total_layoffs():
