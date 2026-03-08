@@ -153,11 +153,22 @@ app_ui = shiny.ui.page_sidebar(
                 shiny.ui.card_header(shiny.ui.output_text("chat_title")),
                 shiny.ui.output_data_frame("chat_table"),
                 shiny.ui.download_button("download_data", "Download"),
-                fill=True,
+                # fill=True,
             ),
-            shiny.ui.card(
-                shiny.ui.card_header("Filtered Data"),
-                shiny.ui.output_data_frame("filtered_data")
+            # shiny.ui.card(
+            #     shiny.ui.card_header("Filtered Data"),
+            #     shiny.ui.output_data_frame("filtered_data")
+            # ),
+            shiny.ui.layout_columns(
+                shiny.ui.card(
+                    shiny.ui.card_header("Workforce Trends"),
+                    output_widget("chat_hiring_layoff_chart"),
+                ),
+                shiny.ui.card(
+                    shiny.ui.card_header("Revenue (Billions USD)"),
+                    output_widget("chat_revenue_chart"),
+                ),
+                col_widths=[7, 5],
             ),
             fillable=True,
         ),
@@ -178,6 +189,80 @@ def server(input, output, session):
     @shiny.render.data_frame
     def chat_table():
         return qc_vals.df()
+
+    def _empty_chart(message):
+        return alt.Chart(pd.DataFrame()).mark_text().encode(
+            text=alt.value(message)
+        )
+
+    @output
+    @render_altair
+    def chat_hiring_layoff_chart():
+        df_full = qc_vals.df()
+        required = {"year", "company", "net_change_pct"}
+        if df_full.empty or not required.issubset(df_full.columns):
+            return _empty_chart("QueryChat's DataFrame does not contain the required columns")
+
+        df_plot = df_full.head(10)
+
+        companies_in = df_plot["company"].unique()
+        if len(companies_in) > 3:
+            comp_str = f"{len(companies_in)} Companies"
+        else:
+            comp_str = ", ".join(sorted(companies_in))
+
+        unique_years = df_plot["year"].nunique()
+
+        if unique_years <= 1:
+            return alt.Chart(df_plot).mark_bar().encode(
+                x=alt.X("company:N", title="Company", sort="-y"),
+                y=alt.Y("net_change_pct:Q", title="Net Change (%)", axis=alt.Axis(format=".1f")),
+                color="company:N",
+                tooltip=["company", "year", alt.Tooltip("net_change_pct:Q", format=".1f")],
+            ).properties(
+                title=f"Net Change % for {comp_str} ({df_plot['year'].iloc[0]})",
+                width="container",
+                height=350,
+            ).interactive()
+
+        return alt.Chart(df_plot).mark_line(point=True).encode(
+            x=alt.X("year:O", title="Year"),
+            y=alt.Y("net_change_pct:Q", title="Net Change (%)", axis=alt.Axis(format=".1f")),
+            color="company:N",
+            tooltip=["company", "year", alt.Tooltip("net_change_pct:Q", format=".1f")],
+        ).properties(
+            title=f"Net Change % Trends for {comp_str}",
+            width="container",
+            height=350,
+        ).interactive()
+
+    @output
+    @render_altair
+    def chat_revenue_chart():
+        df_full = qc_vals.df()
+        required = {"year", "company", "revenue_billions_usd"}
+        if df_full.empty or not required.issubset(df_full.columns):
+            return _empty_chart("Requires: year, company, revenue_billions_usd")
+
+        df_plot = df_full.head(10)
+
+        order = (
+            df_plot.groupby("company", as_index=False)["revenue_billions_usd"]
+            .sum()
+            .sort_values("revenue_billions_usd", ascending=False)["company"]
+            .tolist()
+        )
+
+        return alt.Chart(df_plot).mark_bar().encode(
+            x=alt.X("year:O", title="Year"),
+            y=alt.Y("revenue_billions_usd:Q", title="Revenue by Year (Billions USD)"),
+            color=alt.Color("company:N", legend=None, sort=order),
+            order=alt.Order("revenue_billions_usd:Q", sort="descending"),
+            tooltip=["company", "year", "revenue_billions_usd"],
+        ).properties(
+            width="container",
+            height=350,
+        ).interactive()
 
     @shiny.reactive.calc
     def filtered_df():
@@ -292,7 +377,7 @@ def server(input, output, session):
         if filtered_data.empty:
             return "Total Hires Not Available"
         
-        return f"Total Hires: {total_hires}"
+        return f"Total Hires: {total_hires:,}"
     
     @shiny.render.text
     def total_layoffs():
