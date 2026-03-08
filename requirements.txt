@@ -15,3 +15,4 @@ keplergl
 setuptools<81
 dash
 dash_bootstrap_components
+querychat
