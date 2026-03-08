@@ -1,6 +1,7 @@
 import altair as alt
 import shiny
 from shinywidgets import output_widget, render_altair
+from shiny import render
 import pandas as pd
 import querychat
 from chatlas import ChatGithub
