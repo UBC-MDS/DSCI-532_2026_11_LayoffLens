@@ -8,7 +8,6 @@ import querychat
 from chatlas import ChatGithub
 from dotenv import load_dotenv
 from pathlib import Path
-import os
 
 con = ibis.duckdb.connect()
 
@@ -25,16 +24,6 @@ data = all_data.mutate(
 companies = sorted(data.select("company").distinct().to_pandas()["company"].tolist())
 years = sorted(data.select("year").distinct().to_pandas()["year"].tolist())
 
-# data = pd.read_csv("data/raw/tech_employment_2000_2025.csv")
-# data["net_change_pct"] = (data["employees_end"] / data["employees_start"] * 100) - 100
-# data = data.drop(
-#     ["is_estimated", "confidence_level", "data_quality_score"],
-#     axis=1
-# )
-
-# companies = sorted(data['company'].unique())
-# years = sorted(data['year'].unique())
-
 SELECTED_DEFAULT_COMPANIES = ["Amazon", "Apple", "Alphabet", "Meta", "Microsoft"]
 DEFAULT_COMPANY = [c for c in SELECTED_DEFAULT_COMPANIES if c in companies]
 DEFAULT_YEAR_MIN = int(min(years)) if years else 2000
@@ -43,8 +32,7 @@ DEFAULT_YEAR_MAX = int(max(years)) if years else 2025
 load_dotenv(Path(__file__).parent.parent / ".env")
 
 qc = querychat.QueryChat(
-    # data.copy(),
-    data,
+    data.execute(),
     "Company_Workforce",
     greeting="""👋 Ask me anything about the workforce data.
 
@@ -172,12 +160,7 @@ app_ui = shiny.ui.page_sidebar(
                 shiny.ui.card_header(shiny.ui.output_text("chat_title")),
                 shiny.ui.output_data_frame("chat_table"),
                 shiny.ui.download_button("download_data", "Download"),
-                # fill=True,
             ),
-            # shiny.ui.card(
-            #     shiny.ui.card_header("Filtered Data"),
-            #     shiny.ui.output_data_frame("filtered_data")
-            # ),
             shiny.ui.layout_columns(
                 shiny.ui.card(
                     shiny.ui.card_header("Workforce Trends"),
@@ -294,21 +277,6 @@ def server(input, output, session):
             data["company"].isin(selected),
             data["year"].between(yr[0], yr[1])
         ])
-
-        # if not company_val:
-        #     selected = DEFAULT_COMPANY
-        # else:
-        #     selected = list(company_val)
-
-        # return data[
-        #     (data["company"].isin(selected))
-        #     & (data["year"].between(yr[0], yr[1]))
-        # ]
-    
-    @output
-    @render.data_frame
-    def filtered_data():
-        return filtered_df()
     
     @output
     @render_altair
