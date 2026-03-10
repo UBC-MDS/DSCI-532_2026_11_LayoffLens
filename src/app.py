@@ -3,21 +3,37 @@ import shiny
 from shinywidgets import output_widget, render_altair
 from shiny import render
 import pandas as pd
+import ibis
 import querychat
 from chatlas import ChatGithub
 from dotenv import load_dotenv
 from pathlib import Path
 import os
 
-data = pd.read_csv("data/raw/tech_employment_2000_2025.csv")
-data["net_change_pct"] = (data["employees_end"] / data["employees_start"] * 100) - 100
-data = data.drop(
-    ["is_estimated", "confidence_level", "data_quality_score"],
-    axis=1
+con = ibis.duckdb.connect()
+
+data_path = Path(__file__).parent.parent / "data" / "processed" / "tech_employment_2000_2025.parquet"
+
+all_data = con.read_parquet(data_path)
+
+data = all_data.mutate(
+    net_change_pct=(all_data["employees_end"] / all_data["employees_start"] * 100) - 100
+).drop(
+    "is_estimated", "confidence_level", "data_quality_score"
 )
 
-companies = sorted(data['company'].unique())
-years = sorted(data['year'].unique())
+companies = sorted(data.select("company").distinct().to_pandas()["company"].tolist())
+years = sorted(data.select("year").distinct().to_pandas()["year"].tolist())
+
+# data = pd.read_csv("data/raw/tech_employment_2000_2025.csv")
+# data["net_change_pct"] = (data["employees_end"] / data["employees_start"] * 100) - 100
+# data = data.drop(
+#     ["is_estimated", "confidence_level", "data_quality_score"],
+#     axis=1
+# )
+
+# companies = sorted(data['company'].unique())
+# years = sorted(data['year'].unique())
 
 SELECTED_DEFAULT_COMPANIES = ["Amazon", "Apple", "Alphabet", "Meta", "Microsoft"]
 DEFAULT_COMPANY = [c for c in SELECTED_DEFAULT_COMPANIES if c in companies]
@@ -27,7 +43,8 @@ DEFAULT_YEAR_MAX = int(max(years)) if years else 2025
 load_dotenv(Path(__file__).parent.parent / ".env")
 
 qc = querychat.QueryChat(
-    data.copy(),
+    # data.copy(),
+    data,
     "Company_Workforce",
     greeting="""👋 Ask me anything about the workforce data.
 
@@ -289,7 +306,7 @@ def server(input, output, session):
     @output
     @render_altair
     def revenue_in_billions():
-        df_plot = filtered_df()
+        df_plot = filtered_df().to_pandas()
 
         if df_plot.empty:
             return alt.Chart(pd.DataFrame()).mark_text().encode(text=alt.value("Select a company to see revenue in billions"))
@@ -309,7 +326,7 @@ def server(input, output, session):
     @output
     @render_altair
     def company_trend_plot():
-        df_plot = filtered_df()
+        df_plot = filtered_df().to_pandas()
         metric = input.hiring_metric()
         metric_label = HIRING_METRICS.get(metric, metric)   
 
@@ -364,13 +381,13 @@ def server(input, output, session):
     @shiny.render.text
     def hire_layoff_ratio():
         filtered_data = filtered_df()
-        if filtered_data.empty:
+        if filtered_data.count().execute() == 0:
             return "Hire-Layoff Trend Not Available"
 
-        total_hires = filtered_data.loc[:,"new_hires"].sum()
-        total_layoffs = filtered_data.loc[:, "layoffs"].sum()
+        total_hires = filtered_data["new_hires"].sum().execute()
+        total_layoffs = filtered_data["layoffs"].sum().execute()
 
-        if total_hires == 0 or total_layoffs == 0:
+        if not total_hires or not total_layoffs:
             return "Hire-Layoff Ratio Not Available"
         
         return f"Hire-Layoff Ratio: {total_hires / total_layoffs:,.2f}"
@@ -378,8 +395,10 @@ def server(input, output, session):
     @shiny.render.text
     def total_hires():
         filtered_data = filtered_df()
-        total_hires = filtered_data.loc[:, "new_hires"].sum()
-        if filtered_data.empty:
+        
+        total_hires = filtered_data["new_hires"].sum().execute()
+
+        if total_hires is None:
             return "Total Hires Not Available"
         
         return f"Total Hires: {total_hires:,}"
@@ -387,8 +406,10 @@ def server(input, output, session):
     @shiny.render.text
     def total_layoffs():
         filtered_data = filtered_df()
-        total_layoffs = filtered_data.loc[:, "layoffs"].sum()
-        if filtered_data.empty:
+
+        total_layoffs = filtered_data["layoffs"].sum().execute()
+
+        if total_layoffs is None:
             return "Total Layoffs Not Available"
         
         return f"Total Layoffs: {total_layoffs:,}"
