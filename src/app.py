@@ -288,15 +288,22 @@ def server(input, output, session):
         company_val = input.company()
         yr = input.year()
 
-        if not company_val:
-            selected = DEFAULT_COMPANY
-        else:
-            selected = list(company_val)
+        selected = list(company_val) if company_val else DEFAULT_COMPANY
 
-        return data[
-            (data["company"].isin(selected))
-            & (data["year"].between(yr[0], yr[1]))
-        ]
+        return data.filter([
+            data["company"].isin(selected),
+            data["year"].between(yr[0], yr[1])
+        ])
+
+        # if not company_val:
+        #     selected = DEFAULT_COMPANY
+        # else:
+        #     selected = list(company_val)
+
+        # return data[
+        #     (data["company"].isin(selected))
+        #     & (data["year"].between(yr[0], yr[1]))
+        # ]
     
     @output
     @render.data_frame
