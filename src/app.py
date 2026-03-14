@@ -38,7 +38,6 @@ qc = querychat.QueryChat(
 
 * <span class="suggestion">Show only AMD</span>
 * <span class="suggestion">Filter to companies who grew in 2025</span>
-* <span class="suggestion">Who paid the highest fare?</span>
 * <span class="suggestion">Which companies shrunk in 2020?</span>
 """,
     data_description="""
