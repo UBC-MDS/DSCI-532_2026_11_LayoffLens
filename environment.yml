@@ -3,11 +3,15 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - pyarrow
   - python=3.11
   - pandas
   - numpy
   - matplotlib
   - altair
+  - ibis-framework>=9.0.0
+  - sqlglot>23.0.0
+  - duckdb
   - vl-convert-python
   - jupyterlab
   - ipykernel
