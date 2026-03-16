@@ -29,6 +29,8 @@ DEFAULT_COMPANY = [c for c in SELECTED_DEFAULT_COMPANIES if c in companies]
 DEFAULT_YEAR_MIN = int(min(years)) if years else 2000
 DEFAULT_YEAR_MAX = int(max(years)) if years else 2025
 
+START_WINDOW = max(DEFAULT_YEAR_MIN, DEFAULT_YEAR_MAX - 5)
+
 load_dotenv(Path(__file__).parent.parent / ".env")
 
 qc = querychat.QueryChat(
@@ -72,7 +74,7 @@ years_ui = shiny.ui.input_slider(
     "Select Year Range:",
     min=DEFAULT_YEAR_MIN,
     max=DEFAULT_YEAR_MAX,
-    value=[DEFAULT_YEAR_MIN, DEFAULT_YEAR_MAX],
+    value=[START_WINDOW, DEFAULT_YEAR_MAX],
     sep="",             
     step=1
 )
@@ -399,7 +401,7 @@ def server(input, output, session):
         )
         shiny.ui.update_slider(
             "year",
-            value=[DEFAULT_YEAR_MIN, DEFAULT_YEAR_MAX],
+            value=[START_WINDOW, DEFAULT_YEAR_MAX],
             session=session,
         )
         shiny.ui.update_select(
