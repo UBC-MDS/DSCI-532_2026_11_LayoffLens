@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [0.4.0]
 
+### Added
+
+- KPI delta badges showing trend direction (▲/▼) and percentage change from start to end of selected date range
+- Info banner on the LLM Chat tab clarifying that sidebar filters do not apply to the chat
+- Footer with author names
+- CSS flex-reverse on the QueryChat sidebar so the chat input appears at the top
+
+### Changed
+
+- Renamed "Hiring Metric:" selector to "Workforce Trends Metric:"
+- KPI value box titles changed from dynamic (`output_text`) to fixed labels ("Hire-Layoff Ratio", "Total Hires", "Total Layoffs")
+- KPI values switched from `render.text` to `render.ui` to support rich HTML delta badges
+- Removed `.interactive()` from all Altair charts to prevent unintended zoom/scroll behaviour
+- Removed chart zoom help text from sidebar
+- Resized plots and edited axis labels to be more readable
+- Wrapped chart widgets in `overflow:hidden` divs with `fill=False` to eliminate internal scrollbars
+- Set LLM Chat `layout_sidebar` to fixed 900px height so the QueryChat panel scrolls internally
+- Capped LLM Chat data table card at `max_height="400px"`
+
 ## [0.3.0]
 
 ### Additions
