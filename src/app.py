@@ -312,6 +312,7 @@ def server(input, output, session):
         
         chart = alt.Chart(df_plot).mark_bar().encode(
             x=alt.X("year:O", title="Year"),
+            xOffset="company:N",
             y=alt.Y("revenue_billions_usd:Q", title="Revenue by Year (Billions USD)", axis=alt.Axis(format=",.0f")),
             color=alt.Color("company:N", legend=None),
             tooltip=["company", "year", alt.Tooltip("revenue_billions_usd:Q", format=",.2f")]
