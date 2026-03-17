@@ -15,7 +15,7 @@ from shiny.run import ShinyAppProc
 from shiny.pytest import create_app_fixture
 import pytest
 
-app = create_app_fixture("src/app.py")
+app = create_app_fixture("../src/app.py")
 
 filtered_data = pd.DataFrame({"year": [2010, 2012, 2014, 2016],
                               "new_hires": [1200, 4000, 3200, 10000],
