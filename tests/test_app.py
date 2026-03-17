@@ -2,6 +2,11 @@
 # https://shiny.posit.co/py/api/testing/playwright.controller.InputSelectize.html#shiny.playwright.controller.InputSelectize
 # https://shiny.posit.co/py/api/testing/playwright.controller.InputSlider.html#shiny.playwright.controller.InputSlider
 
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import pandas as pd
 from scripts.render_text import get_rendered_text
 from playwright.sync_api import Page
