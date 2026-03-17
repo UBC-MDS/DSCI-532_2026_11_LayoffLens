@@ -25,6 +25,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Set LLM Chat `layout_sidebar` to fixed 900px height so the QueryChat panel scrolls internally
 - Capped LLM Chat data table card at `max_height="400px"`
 
+### Fixed Issues
+
+- Corrected KPI labels to be more descriptive and accurate
+- Fixed LLM visualizations to better reflect QueryChat outputs
+
 ### Release Highlight: Addition of RAG Context/Knowledge Base
 
 What we chose was the addition of a knowledge base to our chatbot. This was done due to the lackluster performance of the chatbot when making simple filtering queries such as "Which companies experience large layoffs during the pandemic?". Originally, the chatbot just chose companies that had a large number of layoffs but still grew by the end of the year. With the RAG context however, the chatbot now only showed companies (or in this case, company) that suffered a large layoff and shrunk in the year.
@@ -39,6 +44,24 @@ Below are 2 photos showcasing the query before and after the addition of the RAG
 - **PR:** #dbf80c4f5fe54722527f0b0d3f7266e6ae7b6411
 - **Why this option over the others:** This option was chosen because the relevance of adding pertinent knowledge to the chatbot allowed it to answer basic queries more effectively and with more success rather than adding additional features.
 - **Feature prioritization issue link:** #80
+
+## Collaboration
+
+- Added a custom knowledge base for the querychat AI chat interface to help the user get more accurate and relevant responses.
+- Added a dataframe output component to see the filtered dataframe
+- Added a data download button that will download the querychat filtered dataframe
+- Visual overhaul and QoL improvements
+
+Work was distributed evenly among the team members. We all contributed to the development of the app, but some members took the lead on certain features. We all reviewed each other's code and provided feedback, and all PRs were externally reviewed prior to merging. All team members addressed at least one feedback item, and tested the app locally prior to merging.
+
+### Reflection 0.4.0
+
+Release 0.4.0 addresses all the guidelines listed for Milestone 4 and incorporates or addresses additional feedback from TA, instructor, and our peers.Feedback items were all categorized in terms of priority and addressed accordingly. Critical items concerned issues that directly impacted the user experience and obstructed the user from completing their goals. Minor suggestions or enhancements were labelled as non-critical and addressed as well. Trade-offs were made for feedback items that were too minor, or whose fixes would generate significant complexity or refactoring. These suggestions were mostly an alternative direction for development, and would not significantly improve the user experience or better satisfy our goals.
+
+We also strengthened our tests to ensure these changes are reliable. Our unit tests exercise the get_rendered_text() helper on empty data, typical filtered data, and incorrect argument patterns, confirming that it returns correctly formatted summary strings and raises appropriate errors when misused. In addition, Playwright-based end-to-end tests drive the main Shiny inputs (company selectize and year range slider) under both normal and edge-case configurations, which helps ensure that the core filtering interactions and UI wiring behave as expected after each iteration.
+
+The advanced feature of adding a custom knowledge base for the querychat AI chat interface to help the user get more accurate and relevant responses was a major accomplishment for this release. This knowledge base includes company aliases, growth definitions, and data reliability definitions. The added knowledge base will reinforce QueryChat's utility and make the app more robust.
+
 
 ## [0.3.0]
 
