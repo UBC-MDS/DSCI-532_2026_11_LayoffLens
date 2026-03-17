@@ -17,13 +17,12 @@ import pytest
 
 app = create_app_fixture("../src/app.py")
 
-filtered_data = pd.DataFrame({"year": [2010, 2012, 2014, 2016],
-                              "new_hires": [1200, 4000, 3200, 10000],
-                              "layoffs": [250, 1000, 1250, 400]})
+filtered_data = pd.DataFrame({"year": [2010, 2012, 2014, 2016, 2018],
+                              "new_hires": [1200, 4000, 3200, 10000, None],
+                              "layoffs": [250, 1000, 1250, 400, 800]})
 
 new_hires = filtered_data["new_hires"].sum()
 layoffs = filtered_data["layoffs"].sum()
-statistic = None
 
 def test_get_rendered_text_empty():
     """
@@ -37,8 +36,8 @@ def test_get_rendered_text_empty():
     layoffs = filter_df["layoffs"].sum()
 
     assert len(filter_df) == 0
-    assert get_rendered_text(new_hires, "New Hires") == "New Hires: 0"
-    assert get_rendered_text(layoffs, "Layoffs") == "Layoffs: 0"
+    assert get_rendered_text(filter_df, "new_hires", "New Hires") == "New Hires: 0.0"
+    assert get_rendered_text(filter_df, "layoffs", "Layoffs") == "Layoffs: 0"
 
 def test_get_rendered_text_basic():
     """
@@ -48,9 +47,9 @@ def test_get_rendered_text_basic():
 
     """
     assert type(filtered_data) == pd.core.frame.DataFrame
-    assert get_rendered_text(new_hires, "New Hires") == "New Hires: 18,400"
-    assert get_rendered_text(layoffs, "Layoffs") == "Layoffs: 2,900"
-    assert get_rendered_text(statistic, "Statistic") == "Statistic Not Available"
+    assert get_rendered_text(filtered_data, "new_hires", "New Hires") == "New Hires: 18,400.0"
+    assert get_rendered_text(filtered_data, "layoffs", "Layoffs") == "Layoffs: 3,700"
+    assert get_rendered_text(filtered_data.loc[4, :], "new_hires", "New Hires") == "New Hires: nan"
 
 def test_get_rendered_text_missing_arg():
     """
@@ -60,10 +59,10 @@ def test_get_rendered_text_missing_arg():
     
     """
     with pytest.raises(TypeError):
-        get_rendered_text(new_hires)
+        get_rendered_text(filtered_data, "New Hires")
 
     with pytest.raises(TypeError):
-        get_rendered_text("New Hires")
+        get_rendered_text("new_hires", "New Hires")
 
 def test_basic_app_input(page: Page, app: ShinyAppProc):
     """
