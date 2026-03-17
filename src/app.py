@@ -17,8 +17,6 @@ all_data = con.read_parquet(data_path)
 
 data = all_data.mutate(
     net_change_pct=(all_data["employees_end"] / all_data["employees_start"] * 100) - 100
-).drop(
-    "is_estimated", "confidence_level", "data_quality_score"
 )
 
 companies = sorted(data.select("company").distinct().to_pandas()["company"].tolist())
@@ -33,6 +31,16 @@ START_WINDOW = max(DEFAULT_YEAR_MIN, DEFAULT_YEAR_MAX - 5)
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 
+knowledge_base = """
+### DOMAIN KNOWLEDGE
+- **Company Mapping**: 'Twitter' refers to 'X (Twitter)'; 'Google' refers to 'Alphabet'.
+- **Growth Definition**: A company 'grew' if net_change > 0 and 'shrunk' if net_change < 0.
+- **Mass Layoffs**: Defined as years where layoffs > (0.10 * employees_start).
+- **Hyper-growth**: Defined as years where hiring_rate_pct > 50%.
+- **Data Reliability**: Years 2024-2025 are 'estimated' (is_estimated = true). 
+- **Gold Standard**: rows with is_estimated = false and confidence_level = 'High' are verified SEC 10-K data.
+"""
+
 qc = querychat.QueryChat(
     data.execute(),
     "Company_Workforce",
@@ -41,6 +49,7 @@ qc = querychat.QueryChat(
 * <span class="suggestion">Show only AMD</span>
 * <span class="suggestion">Filter to companies who grew in 2025</span>
 * <span class="suggestion">Which companies shrunk in 2020?</span>
+* <span class="suggestion">Which companies experienced large layoffs during the pandemic?"</span>
 """,
     data_description="""
 Workforce data of 25 companies from 2000-2025.
@@ -57,7 +66,7 @@ Workforce data of 25 companies from 2000-2025.
 - stock_price_change_pct: Year-over-year percentage change in the company’s stock price
 - gdp_growth_us_pct: Annual US GDP growth rate (percentage).
 - unemployment_rate_us_pct: AnnQualitative confidence level for the data point (High, Medium, Low) based on source reliability.ual average US unemployment rate (percentage).
-""",
+""" + knowledge_base,
     client = ChatGithub(model = "openai/gpt-4.1")
 )
 
