@@ -63,6 +63,19 @@ Ensure "hot reload" is enabled. This allows the app to refresh automatically whe
 
 Once running, open the link displayed on your terminal to view the dashboard.
 
+### 5 Test the Dashboard
+
+Ensure that you have playwright installed before running the test
+
+```bash
+# Install playwright
+pip install playwright
+playwright install
+
+# Run tests
+pytest
+```
+
 ## Contributing
 
 Interested in contributing to **LayoffLens**? We welcome pull requests! Please review our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, branch naming conventions, and the process for submitting pull requests.
