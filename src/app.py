@@ -380,13 +380,13 @@ def server(input, output, session):
     
     @shiny.render.text
     def total_hires():
-        filtered_data = filtered_df()
-        get_rendered_text(filtered_data, "new_hires", "Total Hires")
+        new_hires = filtered_df()["new_hires"].sum().execute()
+        get_rendered_text(new_hires, "Total Hires")
     
     @shiny.render.text
     def total_layoffs():
-        filtered_data = filtered_df()
-        get_rendered_text(filtered_data, "layoffs", "Total Layoffs")
+        layoffs = filtered_df()["layoffs"].sum().execute()
+        get_rendered_text(layoffs, "Total Layoffs")
     
     @shiny.reactive.effect
     @shiny.reactive.event(input.reset)
