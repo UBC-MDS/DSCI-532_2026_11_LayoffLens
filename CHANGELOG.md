@@ -30,9 +30,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Corrected KPI labels to be more descriptive and accurate
 - Fixed LLM visualizations to better reflect QueryChat outputs
 
-## Release Highlight: RAG Knowledge Base
+### Release Highlight: Addition of RAG Context/Knowledge Base
 
-As an advanced feature, we have installed a custom knowledge base for the querychat AI chat interface to help the user get more accurate and relevant responses. This knowledge base includes company aliases, growth definitions, and data reliability definitions. For example, the QueryChat is now better able to understand that "Twitter" refers to "X (Twitter)" and "Google" refers to "Alphabet".
+What we chose was the addition of a knowledge base to our chatbot. This was done due to the lackluster performance of the chatbot when making simple filtering queries such as "Which companies experience large layoffs during the pandemic?". Originally, the chatbot just chose companies that had a large number of layoffs but still grew by the end of the year. With the RAG context however, the chatbot now only showed companies (or in this case, company) that suffered a large layoff and shrunk in the year.
+
+Below are 2 photos showcasing the query before and after the addition of the RAG context:
+
+![Before the knowledge base was added](img/before_RAG.png)
+
+![After the knowledge base was added](img/after_RAG.png)
+
+- **Option chosen:** C
+- **PR:** #dbf80c4f5fe54722527f0b0d3f7266e6ae7b6411
+- **Why this option over the others:** This option was chosen because the relevance of adding pertinent knowledge to the chatbot allowed it to answer basic queries more effectively and with more success rather than adding additional features.
+- **Feature prioritization issue link:** #80
 
 ## Collaboration
 
@@ -58,7 +69,7 @@ The advanced feature of adding a custom knowledge base for the querychat AI chat
 
 - A querychat AI chat interface
 - A dataframe output component to see the filtered dataframe
-- At least 2 other output component visualizations that use the querychat filtered dataframe (you can borrow from your original tab) 
+- At least 2 other output component visualizations that use the querychat filtered dataframe (you can borrow from your original tab)
 - A data download button that will download the querychat filtered dataframe
 
 ### Improvements/Fixed Issues
