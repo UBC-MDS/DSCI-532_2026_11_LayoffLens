@@ -81,10 +81,12 @@ def test_basic_app_input(page: Page, app: ShinyAppProc):
     selectize_company.set("Amazon")
     selectize_company.expect_selected(["Amazon"])
 
-    selectize_year = controller.InputSlider(page, "year")
-    selectize_year.set([2000, 2025])
-    selectize_year.expect_min([2000])
-    selectize_year.expect_max([2025])
+    selectize_year = controller.InputSliderRange(page, "year")
+    selectize_year.set(("2001", "2025"))
+    selectize_year.expect_step(("1"))
+    selectize_year.expect_min(("2001"))
+    selectize_year.expect_max(("2025"))
+    selectize_year.expect_value(("2001", "2025"))
 
 def test_basic_app_edge_case(page: Page, app: ShinyAppProc):
     """
@@ -103,6 +105,7 @@ def test_basic_app_edge_case(page: Page, app: ShinyAppProc):
     selectize_company.set([])
     selectize_company.expect_selected([])
 
-    selectize_year = controller.InputSlider(page, "year")
-    selectize_year.set([2000, 2000])
-    selectize_year.expect_width(0)
+    selectize_year = controller.InputSliderRange(page, "year")
+    selectize_year.set(("2015", "2015"))
+    selectize_year.expect_step(("1"))
+    selectize_year.expect_value(("2015", "2015"))
