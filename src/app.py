@@ -5,6 +5,7 @@ from shiny import render
 import pandas as pd
 import ibis
 import querychat
+from scripts.render_text import get_rendered_text
 from chatlas import ChatGithub
 from dotenv import load_dotenv
 from pathlib import Path
@@ -380,24 +381,12 @@ def server(input, output, session):
     @shiny.render.text
     def total_hires():
         filtered_data = filtered_df()
-        
-        total_hires = filtered_data["new_hires"].sum().execute()
-
-        if total_hires is None:
-            return "Total Hires Not Available"
-        
-        return f"Total Hires: {total_hires:,}"
+        get_rendered_text(filtered_data, "new_hires", "Total Hires")
     
     @shiny.render.text
     def total_layoffs():
         filtered_data = filtered_df()
-
-        total_layoffs = filtered_data["layoffs"].sum().execute()
-
-        if total_layoffs is None:
-            return "Total Layoffs Not Available"
-        
-        return f"Total Layoffs: {total_layoffs:,}"
+        get_rendered_text(filtered_data, "new_hires", "Total Hires")
     
     @shiny.reactive.effect
     @shiny.reactive.event(input.reset)
