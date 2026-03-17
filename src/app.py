@@ -386,7 +386,7 @@ def server(input, output, session):
     @shiny.render.text
     def total_layoffs():
         filtered_data = filtered_df()
-        get_rendered_text(filtered_data, "new_hires", "Total Hires")
+        get_rendered_text(filtered_data, "layoffs", "Total Layoffs")
     
     @shiny.reactive.effect
     @shiny.reactive.event(input.reset)
