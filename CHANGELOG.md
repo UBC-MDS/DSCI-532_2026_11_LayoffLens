@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [0.4.0]
 
+### Added
+
+- KPI delta badges showing trend direction (▲/▼) and percentage change from start to end of selected date range
+- Info banner on the LLM Chat tab clarifying that sidebar filters do not apply to the chat
+- Footer with author names
+- Comma-formatted Y-axis labels on all charts to prevent scientific notation
+- `autosize` property on Altair charts to fit titles, axes, and legends within the specified height
+- CSS flex-reverse on the QueryChat sidebar so the chat input appears at the top
+
+### Changed
+
+- Renamed "Hiring Metric:" selector to "Workforce Trends Metric:"
+- KPI value box titles changed from dynamic (`output_text`) to fixed labels ("Hire-Layoff Ratio", "Total Hires", "Total Layoffs")
+- KPI values switched from `render.text` to `render.ui` to support rich HTML delta badges
+- Removed `.interactive()` from all Altair charts to prevent unintended zoom/scroll behaviour
+- Removed chart zoom help text from sidebar
+- Wrapped chart widgets in `overflow:hidden` divs with `fill=False` to eliminate internal scrollbars
+- Set LLM Chat `layout_sidebar` to fixed 900px height so the QueryChat panel scrolls internally
+- Capped LLM Chat data table card at `max_height="400px"`
+- Set Company Insights chart heights to 400px and LLM Chat chart heights to 350px
+
+### Fixed
+
+- Reset button crash caused by `list(None)` when selectize returned `None`
+- `TypeError: Object of type int64 is not JSON serializable` in year slider reset
+- Potential `IndexError` on empty data when accessing `companies[0]`
+- Scientific notation on Y-axis for revenue, net change, and new hires charts (now uses `",.0f"` D3 format)
+
 ## [0.3.0]
 
 ### Additions
