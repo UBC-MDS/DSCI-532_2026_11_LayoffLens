@@ -5,6 +5,7 @@ from shiny import render
 import pandas as pd
 import ibis
 import querychat
+from scripts.render_text import get_rendered_text
 from chatlas import ChatGithub
 from dotenv import load_dotenv
 from pathlib import Path

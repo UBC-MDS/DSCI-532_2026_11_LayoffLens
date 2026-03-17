@@ -17,3 +17,5 @@ querychat
 ibis-framework
 duckdb
 pyarrow
+pytest
+pytest-playwright

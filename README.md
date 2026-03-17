@@ -28,6 +28,17 @@ The following is a demo of our dashboard and how the components function:
 
 ![Layoff Lens Dashboard Demo](img/demo.gif)
 
+### How to use Dashboard
+
+The dashboard contains two tabs, the first is the landing/main page containing the summary statistics, relevant bar and line plots with properly labelled axis and title, and a sidebar. There are three components within the sidebar;
+
+- Select Companies: You can select or deselect a number of companies beyond the default settings and understand how the hiring-layoff tradeoff functions. The default metrics are explained above.
+- Select Year Range: This is a slider tool to select the range of years you would like to view on the dashboard. This ranges between 2000 to 2025.
+- Hiring Metric: You can select the hiring metric of interest from a list of four critical ones: Net Change, Net Change %, New Hires, Hiring Rate %.
+- Reset All Filters: You can choose to reset your current filters back to the default ones.
+
+The second tab contains the LLM Chat, where you can interact with the chatbot to ask relevant questions regarding hiring and layoff trends. The chatbot should be able to filter, describe and react on the prompt given to provide deep insights into queries of concern.
+
 ## Local Development
 
 To run the dashboard locally, follow these steps:
@@ -73,6 +84,19 @@ shiny run --reload src/app.py
 Ensure "hot reload" is enabled. This allows the app to refresh automatically when you save changes.
 
 Once running, open the link displayed on your terminal to view the dashboard.
+
+### 5 Test the Dashboard
+
+Ensure that you have playwright installed before running the test
+
+```bash
+# Install playwright
+pip install playwright
+playwright install
+
+# Run tests
+pytest
+```
 
 ## Contributing
 
