@@ -3,38 +3,54 @@ import shiny
 from shinywidgets import output_widget, render_altair
 from shiny import render
 import pandas as pd
+import ibis
 import querychat
+from scripts.render_text import get_rendered_text
 from chatlas import ChatGithub
 from dotenv import load_dotenv
 from pathlib import Path
-import os
 
-data = pd.read_csv("data/raw/tech_employment_2000_2025.csv")
-data["net_change_pct"] = (data["employees_end"] / data["employees_start"] * 100) - 100
-data = data.drop(
-    ["is_estimated", "confidence_level", "data_quality_score"],
-    axis=1
+con = ibis.duckdb.connect()
+
+data_path = Path(__file__).parent.parent / "data" / "processed" / "tech_employment_2000_2025.parquet"
+
+all_data = con.read_parquet(data_path)
+
+data = all_data.mutate(
+    net_change_pct=(all_data["employees_end"] / all_data["employees_start"] * 100) - 100
 )
 
-companies = sorted(data['company'].unique())
-years = sorted(data['year'].unique())
+companies = sorted(data.select("company").distinct().to_pandas()["company"].tolist())
+years = sorted(data.select("year").distinct().to_pandas()["year"].tolist())
 
 SELECTED_DEFAULT_COMPANIES = ["Amazon", "Apple", "Alphabet", "Meta", "Microsoft"]
 DEFAULT_COMPANY = [c for c in SELECTED_DEFAULT_COMPANIES if c in companies]
 DEFAULT_YEAR_MIN = int(min(years)) if years else 2000
 DEFAULT_YEAR_MAX = int(max(years)) if years else 2025
 
+START_WINDOW = max(DEFAULT_YEAR_MIN, DEFAULT_YEAR_MAX - 5)
+
 load_dotenv(Path(__file__).parent.parent / ".env")
 
+knowledge_base = """
+### DOMAIN KNOWLEDGE
+- **Company Mapping**: 'Twitter' refers to 'X (Twitter)'; 'Google' refers to 'Alphabet'.
+- **Growth Definition**: A company 'grew' if net_change > 0 and 'shrunk' if net_change < 0.
+- **Mass Layoffs**: Defined as years where layoffs > (0.10 * employees_start).
+- **Hyper-growth**: Defined as years where hiring_rate_pct > 50%.
+- **Data Reliability**: Years 2024-2025 are 'estimated' (is_estimated = true). 
+- **Gold Standard**: rows with is_estimated = false and confidence_level = 'High' are verified SEC 10-K data.
+"""
+
 qc = querychat.QueryChat(
-    data.copy(),
+    data.execute(),
     "Company_Workforce",
     greeting="""👋 Ask me anything about the workforce data.
 
 * <span class="suggestion">Show only AMD</span>
 * <span class="suggestion">Filter to companies who grew in 2025</span>
-* <span class="suggestion">Who paid the highest fare?</span>
 * <span class="suggestion">Which companies shrunk in 2020?</span>
+* <span class="suggestion">Which companies experienced large layoffs during the pandemic?"</span>
 """,
     data_description="""
 Workforce data of 25 companies from 2000-2025.
@@ -51,7 +67,7 @@ Workforce data of 25 companies from 2000-2025.
 - stock_price_change_pct: Year-over-year percentage change in the company’s stock price
 - gdp_growth_us_pct: Annual US GDP growth rate (percentage).
 - unemployment_rate_us_pct: AnnQualitative confidence level for the data point (High, Medium, Low) based on source reliability.ual average US unemployment rate (percentage).
-""",
+""" + knowledge_base,
     client = ChatGithub(model = "openai/gpt-4.1")
 )
 
@@ -68,7 +84,7 @@ years_ui = shiny.ui.input_slider(
     "Select Year Range:",
     min=DEFAULT_YEAR_MIN,
     max=DEFAULT_YEAR_MAX,
-    value=[DEFAULT_YEAR_MIN, DEFAULT_YEAR_MAX],
+    value=[START_WINDOW, DEFAULT_YEAR_MAX],
     sep="",             
     step=1
 )
@@ -82,7 +98,7 @@ HIRING_METRICS = {
 
 hiring_metric_ui = shiny.ui.input_select(
     "hiring_metric",
-    "Hiring Metric:",
+    "Workforce Trends Metric:",
     choices=HIRING_METRICS,
     selected="net_change_pct"
 )
@@ -104,8 +120,6 @@ app_ui = shiny.ui.page_sidebar(
         years_ui,     
         hiring_metric_ui,
         reset_ui,
-        shiny.ui.hr(), 
-        shiny.ui.help_text("Tip: Click and drag on charts to zoom; double-click to reset view."),
         shiny.ui.hr(),
         shiny.ui.help_text(
             "Note: High hiring spikes can precede consolidation. Use the Hire-Layoff ratio to assess long-term stability."
@@ -117,50 +131,56 @@ app_ui = shiny.ui.page_sidebar(
             "Company Insights",
             shiny.ui.layout_columns(
                 shiny.ui.value_box(
-                    shiny.ui.output_text("ratio_title"), 
-                    shiny.ui.output_text("hire_layoff_ratio"),
+                    "Hire-Layoff Ratio",
+                    shiny.ui.output_ui("hire_layoff_ratio"),
                     theme="primary",
                 ),
                 shiny.ui.value_box(
-                    shiny.ui.output_text("metric_title"), 
-                    shiny.ui.output_text("total_hires"),
+                    "Total Hires",
+                    shiny.ui.output_ui("total_hires"),
                     theme="success",
                 ),
                 shiny.ui.value_box(
-                    "Total Layoffs", 
-                    shiny.ui.output_text("total_layoffs"),
+                    "Total Layoffs",
+                    shiny.ui.output_ui("total_layoffs"),
                     theme="danger",
                 ),
             ),
             shiny.ui.layout_columns(
                 shiny.ui.card(
                     shiny.ui.card_header("Workforce Trends"),
-                    output_widget("company_trend_plot"),
+                    # overflow hidden to prevent scrollbars from appearing
+                    shiny.ui.div(output_widget("company_trend_plot"), style="overflow:hidden;"),
+                    fill=False,
                 ),
                 shiny.ui.card(
                     shiny.ui.card_header("Revenue (Billions USD)"),
-                    output_widget("revenue_in_billions"),
+                    shiny.ui.div(output_widget("revenue_in_billions"), style="overflow:hidden;"),
+                    fill=False,
                 ),
                 col_widths=[7, 5]
             ),
             
         ),
         
-        # --- TAB 2: SKELETON FOR NEW TAB ---
+        # --- TAB 2: LLM CHAT ---
         shiny.ui.nav_panel(
             "LLM Chat",
+            shiny.ui.div(
+                shiny.ui.tags.div(
+                    "The chat below queries the full dataset — sidebar filters (companies, year range) do not apply here.",
+                    class_="alert alert-info py-2 mb-3",
+                    role="alert",
+                ),
+            ),
             shiny.ui.layout_sidebar(
             qc.sidebar(),
             shiny.ui.card(
                 shiny.ui.card_header(shiny.ui.output_text("chat_title")),
                 shiny.ui.output_data_frame("chat_table"),
                 shiny.ui.download_button("download_data", "Download"),
-                # fill=True,
+                max_height="400px",
             ),
-            # shiny.ui.card(
-            #     shiny.ui.card_header("Filtered Data"),
-            #     shiny.ui.output_data_frame("filtered_data")
-            # ),
             shiny.ui.layout_columns(
                 shiny.ui.card(
                     shiny.ui.card_header("Workforce Trends"),
@@ -173,8 +193,16 @@ app_ui = shiny.ui.page_sidebar(
                 col_widths=[7, 5],
             ),
             fillable=True,
+            height="900px",
         ),
     ),
+    ),
+    shiny.ui.tags.footer(
+        shiny.ui.tags.hr(),
+        shiny.ui.tags.p(
+            "Built by MantramSharma007, shreyakakachery, JeffHDing, agill59",
+            style="text-align:center; color:#6c757d; font-size:0.85em; padding:0.5em 0;",
+        ),
     ),
     title="Layoff Lens: Tech Workforce Dashboard"
 )
@@ -225,8 +253,7 @@ def server(input, output, session):
                 title=f"Net Change % for {comp_str} ({df_plot['year'].iloc[0]})",
                 width="container",
                 height=350,
-            ).interactive()
-
+            )
         return alt.Chart(df_plot).mark_line(point=True).encode(
             x=alt.X("year:O", title="Year"),
             y=alt.Y("net_change_pct:Q", title="Net Change (%)", axis=alt.Axis(format=".1f")),
@@ -236,8 +263,7 @@ def server(input, output, session):
             title=f"Net Change % Trends for {comp_str}",
             width="container",
             height=350,
-        ).interactive()
-
+        )
     @output
     @render_altair
     def chat_revenue_chart():
@@ -257,59 +283,51 @@ def server(input, output, session):
 
         return alt.Chart(df_plot).mark_bar().encode(
             x=alt.X("year:O", title="Year"),
-            y=alt.Y("revenue_billions_usd:Q", title="Revenue by Year (Billions USD)"),
+            y=alt.Y("revenue_billions_usd:Q", title="Revenue by Year (Billions USD)", axis=alt.Axis(format=",.0f")),
             color=alt.Color("company:N", legend=None, sort=order),
             order=alt.Order("revenue_billions_usd:Q", sort="descending"),
-            tooltip=["company", "year", "revenue_billions_usd"],
+            tooltip=["company", "year", alt.Tooltip("revenue_billions_usd:Q", format=",.2f")],
         ).properties(
             width="container",
             height=350,
-        ).interactive()
-
+        )
     @shiny.reactive.calc
     def filtered_df():
         company_val = input.company()
         yr = input.year()
 
-        if not company_val:
-            selected = DEFAULT_COMPANY
-        else:
-            selected = list(company_val)
+        selected = list(company_val) if company_val else DEFAULT_COMPANY
 
-        return data[
-            (data["company"].isin(selected))
-            & (data["year"].between(yr[0], yr[1]))
-        ]
-    
-    @output
-    @render.data_frame
-    def filtered_data():
-        return filtered_df()
+        return data.filter([
+            data["company"].isin(selected),
+            data["year"].between(yr[0], yr[1])
+        ])
     
     @output
     @render_altair
     def revenue_in_billions():
-        df_plot = filtered_df()
+        df_plot = filtered_df().to_pandas()
 
         if df_plot.empty:
             return alt.Chart(pd.DataFrame()).mark_text().encode(text=alt.value("Select a company to see revenue in billions"))
         
         chart = alt.Chart(df_plot).mark_bar().encode(
             x=alt.X("year:O", title="Year"),
-            y=alt.Y("revenue_billions_usd:Q", title="Revenue by Year (Billions USD)"),
+            xOffset="company:N",
+            y=alt.Y("revenue_billions_usd:Q", title="Revenue by Year (Billions USD)", axis=alt.Axis(format=",.0f")),
             color=alt.Color("company:N", legend=None),
-            tooltip=["company", "year", "revenue_billions_usd"]
+            tooltip=["company", "year", alt.Tooltip("revenue_billions_usd:Q", format=",.2f")]
         ).properties(
             width="container",
-            height=400
-        ).interactive()
-
+            height=400,
+            autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        )
         return chart
     
     @output
     @render_altair
     def company_trend_plot():
-        df_plot = filtered_df()
+        df_plot = filtered_df().to_pandas()
         metric = input.hiring_metric()
         metric_label = HIRING_METRICS.get(metric, metric)   
 
@@ -331,7 +349,7 @@ def server(input, output, session):
             y_format = ".1f" 
         else:
             y_title = f"{metric_label} (Total)"
-            y_format = ","
+            y_format = ",.0f"
 
         chart = alt.Chart(df_plot).mark_line(point=True).encode(
             x=alt.X("year:O", title="Year"),
@@ -341,57 +359,93 @@ def server(input, output, session):
         ).properties(
             title=chart_title,
             width="container",
-            height=400
-        ).interactive()
-
+            height=400,
+            autosize=alt.AutoSizeParams(type="fit", contains="padding"),
+        )
         return chart
 
-    @shiny.render.text
-    def ratio_title():
-        metric = input.hiring_metric()
-        if metric == "hiring_rate_pct":
-            return "Avg Hiring Rate"
-        return f"{HIRING_METRICS.get(metric, metric)} / Layoff Ratio"
+    def _delta_badge(current, previous, fmt=",", invert=False):
+        """Return styled HTML showing value + delta arrow.
+        
+        `invert=True` means a decrease is good (e.g. layoffs going down).
+        """
+        if current is None:
+            return shiny.ui.span("N/A")
 
-    @shiny.render.text
-    def metric_title():
-        metric = input.hiring_metric()
-        label = HIRING_METRICS.get(metric, metric)
-        if metric == "hiring_rate_pct":
-            return f"Avg {label}"
-        return f"Total {label}"
+        value_str = f"{current:{fmt}}"
 
-    @shiny.render.text
+        if previous is None or previous == 0:
+            return shiny.ui.span(value_str)
+
+        pct_change = (current - previous) / abs(previous) * 100
+        arrow = "▲" if pct_change > 0 else "▼" if pct_change < 0 else "—"
+        color = "white"
+
+        return shiny.ui.div(
+            shiny.ui.span(value_str),
+            shiny.ui.span(
+                f" {arrow} {abs(pct_change):.1f}%",
+                style=f"color:{color}; font-size:0.75em; font-weight:600; margin-left:0.4em;",
+            ),
+            style="display:inline-flex; align-items:baseline; gap:0.25em;",
+        )
+
+    def _year_endpoints():
+        """Return the first and last year of the selected range."""
+        yr = input.year()
+        return int(yr[0]), int(yr[1])
+
+    @shiny.render.ui
     def hire_layoff_ratio():
         filtered_data = filtered_df()
-        if filtered_data.empty:
-            return "Hire-Layoff Trend Not Available"
+        if filtered_data.count().execute() == 0:
+            return "N/A"
 
-        total_hires = filtered_data.loc[:,"new_hires"].sum()
-        total_layoffs = filtered_data.loc[:, "layoffs"].sum()
+        total_h = filtered_data["new_hires"].sum().execute()
+        total_l = filtered_data["layoffs"].sum().execute()
 
-        if total_hires == 0 or total_layoffs == 0:
-            return "Hire-Layoff Ratio Not Available"
-        
-        return f"Hire-Layoff Ratio: {total_hires / total_layoffs:,.2f}"
-    
-    @shiny.render.text
+        if not total_h or not total_l:
+            return "N/A"
+
+        current_ratio = total_h / total_l
+
+        start_yr, end_yr = _year_endpoints()
+        start = filtered_data.filter(data["year"] == start_yr)
+        end = filtered_data.filter(data["year"] == end_yr)
+        sh, sl = start["new_hires"].sum().execute(), start["layoffs"].sum().execute()
+        eh, el = end["new_hires"].sum().execute(), end["layoffs"].sum().execute()
+        start_ratio = (sh / sl) if sh and sl else None
+        end_ratio = (eh / el) if eh and el else None
+
+        return _delta_badge(round(current_ratio, 2), round(start_ratio, 2) if start_ratio else None, fmt=",.2f")
+
+    @shiny.render.ui
     def total_hires():
         filtered_data = filtered_df()
-        total_hires = filtered_data.loc[:, "new_hires"].sum()
-        if filtered_data.empty:
-            return "Total Hires Not Available"
-        
-        return f"Total Hires: {total_hires:,}"
-    
-    @shiny.render.text
+        total_h = filtered_data["new_hires"].sum().execute()
+
+        if total_h is None:
+            return "N/A"
+
+        start_yr, end_yr = _year_endpoints()
+        start_val = filtered_data.filter(data["year"] == start_yr)["new_hires"].sum().execute()
+        end_val = filtered_data.filter(data["year"] == end_yr)["new_hires"].sum().execute()
+
+        return _delta_badge(end_val, start_val, fmt=",")
+
+    @shiny.render.ui
     def total_layoffs():
         filtered_data = filtered_df()
-        total_layoffs = filtered_data.loc[:, "layoffs"].sum()
-        if filtered_data.empty:
-            return "Total Layoffs Not Available"
-        
-        return f"Total Layoffs: {total_layoffs:,}"
+        total_l = filtered_data["layoffs"].sum().execute()
+
+        if total_l is None:
+            return "N/A"
+
+        start_yr, end_yr = _year_endpoints()
+        start_val = filtered_data.filter(data["year"] == start_yr)["layoffs"].sum().execute()
+        end_val = filtered_data.filter(data["year"] == end_yr)["layoffs"].sum().execute()
+
+        return _delta_badge(end_val, start_val, fmt=",", invert=True)
     
     @shiny.reactive.effect
     @shiny.reactive.event(input.reset)
@@ -404,7 +458,7 @@ def server(input, output, session):
         )
         shiny.ui.update_slider(
             "year",
-            value=[DEFAULT_YEAR_MIN, DEFAULT_YEAR_MAX],
+            value=[START_WINDOW, DEFAULT_YEAR_MAX],
             session=session,
         )
         shiny.ui.update_select(

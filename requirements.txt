@@ -13,6 +13,9 @@ shinylive
 shinywidgets
 keplergl
 setuptools<81
-dash
-dash_bootstrap_components
 querychat
+ibis-framework
+duckdb
+pyarrow
+pytest
+pytest-playwright

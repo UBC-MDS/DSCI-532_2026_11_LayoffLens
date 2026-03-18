@@ -6,6 +6,17 @@ Layoff Lens is an interactive Shiny dashboard designed to help job seekers and d
 
 Raw hiring data can be misleading. We live in a market where a company might hire 1,000 people while simultaneously laying off 1,200. Layoff Lens safeguards users by visualizing the Net Change and Hire-Layoff Ratio. This allows applicants to prioritize companies with a healthy, expanding environment rather than those simply replacing churned staff, helping them avoid pull-back periods following rapid, unsustainable growth.
 
+## Default Metrics
+
+The **Company Insights** tab opens with four default metrics chosen to give an immediate, balanced picture of workforce health:
+
+- **Net Change %** (Workforce Trends chart) — normalises headcount change by company size, so a 500-person swing at a 10,000-employee firm is directly comparable to one at a 200,000-employee firm. This is the default because absolute numbers can be misleading when comparing companies of very different scales.
+- **Hire-Layoff Ratio** — a value above 1.0 means the company hired more people than it laid off over the selected period. This single number quickly separates genuinely growing firms from those that are simply back-filling departures.
+- **Total Hires** — raw hiring volume signals how actively a company is recruiting, which matters to job seekers looking for open roles regardless of net growth.
+- **Total Layoffs** — surfaces contraction risk. Even a company with strong net growth may have conducted significant layoffs in specific years, and this metric highlights that.
+
+Each KPI includes a delta badge (▲/▼) comparing the value at the end of the selected date range to the start, so users can see at a glance whether a metric is trending up or down.
+
 ## Deployed Dashboards
 
 - [Stable Version](https://019c8d0c-d197-57fd-3fdf-d468eac4c556.share.connect.posit.cloud/)
@@ -16,6 +27,17 @@ Raw hiring data can be misleading. We live in a market where a company might hir
 The following is a demo of our dashboard and how the components function: 
 
 ![Layoff Lens Dashboard Demo](img/demo.gif)
+
+### How to use Dashboard
+
+The dashboard contains two tabs, the first is the landing/main page containing the summary statistics, relevant bar and line plots with properly labelled axis and title, and a sidebar. There are three components within the sidebar;
+
+- Select Companies: You can select or deselect a number of companies beyond the default settings and understand how the hiring-layoff tradeoff functions. The default metrics are explained above.
+- Select Year Range: This is a slider tool to select the range of years you would like to view on the dashboard. This ranges between 2000 to 2025.
+- Hiring Metric: You can select the hiring metric of interest from a list of four critical ones: Net Change, Net Change %, New Hires, Hiring Rate %.
+- Reset All Filters: You can choose to reset your current filters back to the default ones.
+
+The second tab contains the LLM Chat, where you can interact with the chatbot to ask relevant questions regarding hiring and layoff trends. The chatbot should be able to filter, describe and react on the prompt given to provide deep insights into queries of concern.
 
 ## Local Development
 
@@ -62,6 +84,19 @@ shiny run --reload src/app.py
 Ensure "hot reload" is enabled. This allows the app to refresh automatically when you save changes.
 
 Once running, open the link displayed on your terminal to view the dashboard.
+
+### 5 Test the Dashboard
+
+Ensure that you have playwright installed before running the test
+
+```bash
+# Install playwright
+pip install playwright
+playwright install
+
+# Run tests
+pytest
+```
 
 ## Contributing
 
