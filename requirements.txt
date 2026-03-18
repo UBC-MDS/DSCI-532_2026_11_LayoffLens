@@ -19,3 +19,4 @@ duckdb
 pyarrow
 pytest
 pytest-playwright
+pyarrow_hotfix
